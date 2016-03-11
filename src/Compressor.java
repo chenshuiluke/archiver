@@ -107,6 +107,9 @@ public class Compressor
             catch(FileNotFoundException exc){
                 System.out.println("\nError reading " + file);
             }
+            catch(IOException exc){
+                System.out.println("\nFile too large: " + file);
+            }
 
         }
     	/*
