@@ -150,7 +150,7 @@ public class Compressor
 
     	//add file only
 	if(node.isFile()){
-		fileList.add(generateZipEntry(node.getAbsoluteFile().toString()));
+		fileList.add(generateZipEntry(node.getPath()));
 	}
 		
 	if(node.isDirectory()){
