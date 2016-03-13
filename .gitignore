@@ -1,5 +1,6 @@
 # Created by https://www.gitignore.io/api/java,vim,gradle
 
+presets/*
 ### Gradle ###
 .gradle
 build/
