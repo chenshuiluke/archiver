@@ -62,10 +62,12 @@ public class CreateBackupController {
 		else if(file.isDirectory()){
 				String[] subNote = file.list();
 				TreeItem<FileToBackup> level = new TreeItem<>(new FileToBackup(file.getName(), file.getAbsoluteFile().toString()));
-				for(String filename : subNote){
-					File temp = new File(file, filename);
-					TreeItem<FileToBackup> row = new TreeItem<>(new FileToBackup(temp.getName(), temp.getAbsoluteFile().toString()));
-					level.getChildren().add(addFilesRecursively(temp));
+				if(subNote != null){
+					for(String filename : subNote){
+						File temp = new File(file, filename);
+						TreeItem<FileToBackup> row = new TreeItem<>(new FileToBackup(temp.getName(), temp.getAbsoluteFile().toString()));
+						level.getChildren().add(addFilesRecursively(temp));
+					}
 				}
 				return level;
 		}
@@ -101,13 +103,15 @@ public class CreateBackupController {
 		printChildren(fileTable.getRoot());
 	}
     private void printChildren(TreeItem<FileToBackup> root){
-        System.out.println("Current Parent :" + root.getValue());
-        for(TreeItem<FileToBackup> child: root.getChildren()){
-            if(child.getChildren().isEmpty()){
-                System.out.println(child.getValue().getLocation());
-            } else {
-                printChildren(child);
-            }
-        }
+		if(root != null){
+			System.out.println("Current Parent :" + root.getValue());
+			for(TreeItem<FileToBackup> child: root.getChildren()){
+				if(child != null && child.getChildren() != null && child.getChildren().isEmpty()){
+					System.out.println(child.getValue().getLocation());
+				} else {
+					printChildren(child);
+				}
+			}
+		}
     }
 }
