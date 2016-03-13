@@ -7,6 +7,7 @@ import java.net.URL;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.Parent;
+import javafx.application.Platform;
 
 public class Archiver extends Application{
 	public static void main(String[] args){
@@ -23,6 +24,10 @@ public class Archiver extends Application{
 			System.out.println("fxmlResource = " + sceneFile);
 			Scene scene = new Scene(root);
 			primaryStage.setScene(scene);
+			primaryStage.setOnCloseRequest(e -> {
+				Platform.exit();
+				System.exit(0);
+			});
 			primaryStage.show();
 		}
 		catch(Exception ex)
