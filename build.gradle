@@ -1,2 +1,8 @@
 apply plugin: 'application'
 mainClassName = "archiver.Archiver"
+repositories {
+    mavenCentral()
+}
+dependencies{
+
+}

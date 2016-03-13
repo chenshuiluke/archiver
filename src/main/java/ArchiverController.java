@@ -21,7 +21,7 @@ public class ArchiverController {
 			URL url = getClass().getClassLoader().getResource("CreateBackup.fxml");
 			Parent root1 = (Parent) FXMLLoader.load(url);
 			Stage stage = new Stage();
-			stage.setTitle("ABC");
+			stage.setTitle("Create New Backup");
 			stage.setScene(new Scene(root1));  
 			stage.show();
 		}

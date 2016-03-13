@@ -14,7 +14,9 @@ import javafx.scene.control.TreeItem;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.control.TreeTableColumn.CellDataFeatures;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import java.io.File;
+import javafx.scene.control.TreeItem;
 
 public class CreateBackupController {
 
@@ -25,25 +27,32 @@ public class CreateBackupController {
 	@FXML
 	private TreeTableColumn<FileToBackup, String> locationsColumn;
 	
-
+    @FXML
+	private void addFile(){
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Choose a File");
+		File file = chooser.showOpenDialog(null);
+		if(file != null){
+			TreeItem<FileToBackup> row = new TreeItem<>(new FileToBackup(file.getName(), file.getAbsoluteFile().toString()));
+			fileTable.getRoot().getChildren().add(row);
+		}
+	}
     @FXML
     private void addFolder(){
-		System.out.println("Here");
-		if(fileTable.getRoot() == null){
-			TreeItem<FileToBackup> root = new TreeItem<FileToBackup>(new FileToBackup("Files"));
-			root.setExpanded(true);
-			fileTable.setRoot(root);
-		}
-		fileTable.setShowRoot(true);
-		
 		DirectoryChooser chooser = new DirectoryChooser();
-		chooser.setTitle("Chooose Directory");
+		chooser.setTitle("Choose Directory");
 		File directory = chooser.showDialog(null);
 		if(directory != null){
 			fileTable.getRoot().getChildren().add(addFilesRecursively(directory));
 		}
-	
     }
+	@FXML
+	private void removeSelected(){
+		TreeItem item = fileTable.getSelectionModel().getSelectedItem();
+		if(item != null){
+			item.getParent().getChildren().remove(item);
+		}
+	}
 	private TreeItem<FileToBackup> addFilesRecursively(File file){
 		//add file only
 		if(file.isFile()){
@@ -52,7 +61,7 @@ public class CreateBackupController {
 		}
 		else if(file.isDirectory()){
 				String[] subNote = file.list();
-				TreeItem<FileToBackup> level = new TreeItem<>(new FileToBackup(file.getName()));
+				TreeItem<FileToBackup> level = new TreeItem<>(new FileToBackup(file.getName(), file.getAbsoluteFile().toString()));
 				for(String filename : subNote){
 					File temp = new File(file, filename);
 					TreeItem<FileToBackup> row = new TreeItem<>(new FileToBackup(temp.getName(), temp.getAbsoluteFile().toString()));
@@ -70,10 +79,35 @@ public class CreateBackupController {
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
+		if(fileTable.getRoot() == null){
+			TreeItem<FileToBackup> root = new TreeItem<FileToBackup>(new FileToBackup("Files"));
+			root.setExpanded(true);
+			fileTable.setRoot(root);
+		}
+		fileTable.setShowRoot(true);
 		filesColumn.setCellValueFactory((CellDataFeatures<FileToBackup, String> p) -> new ReadOnlyStringWrapper(
 					p.getValue().getValue().getName()));
 		locationsColumn.setCellValueFactory((CellDataFeatures<FileToBackup, String> p) -> new ReadOnlyStringWrapper(
 					p.getValue().getValue().getLocation()));
-
+/*
+        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> {
+					fileTable.scrollTo(0);
+		            System.out.println("Handler caught exception: "+throwable.getMessage());
+					        });
+*/
+    }
+	@FXML
+	private void save(){
+		printChildren(fileTable.getRoot());
+	}
+    private void printChildren(TreeItem<FileToBackup> root){
+        System.out.println("Current Parent :" + root.getValue());
+        for(TreeItem<FileToBackup> child: root.getChildren()){
+            if(child.getChildren().isEmpty()){
+                System.out.println(child.getValue().getLocation());
+            } else {
+                printChildren(child);
+            }
+        }
     }
 }
