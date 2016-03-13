@@ -17,6 +17,9 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import java.io.File;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 public class CreateBackupController {
 
@@ -27,6 +30,8 @@ public class CreateBackupController {
 	@FXML
 	private TreeTableColumn<FileToBackup, String> locationsColumn;
 	
+    @FXML 
+	private TextField backupName;
     @FXML
 	private void addFile(){
 		FileChooser chooser = new FileChooser();
@@ -100,7 +105,14 @@ public class CreateBackupController {
     }
 	@FXML
 	private void save(){
-		printChildren(fileTable.getRoot());
+		if(backupName.getText().equals("")){
+			Alert box = new Alert(AlertType.ERROR, "You must specify a backup name!");
+			box.showAndWait();
+		}
+		else{
+			System.out.printf("Backup text: %s|\n", backupName.getText());
+			printChildren(fileTable.getRoot());
+		}
 	}
     private void printChildren(TreeItem<FileToBackup> root){
 		if(root != null){

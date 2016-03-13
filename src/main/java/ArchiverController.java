@@ -16,7 +16,6 @@ public class ArchiverController {
 
     @FXML
     private void showCreateNewBackupWindow(){
-	System.out.println("Here");
 		try{
 			URL url = getClass().getClassLoader().getResource("CreateBackup.fxml");
 			Parent root1 = (Parent) FXMLLoader.load(url);

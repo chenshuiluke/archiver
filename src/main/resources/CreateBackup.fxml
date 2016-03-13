@@ -2,29 +2,33 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TreeTableColumn?>
 <?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
 
 <VBox prefHeight="255.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="archiver.CreateBackupController">
   <children>
     <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="306.0" prefWidth="640.0" VBox.vgrow="ALWAYS">
       <children>
-            <ButtonBar buttonMinWidth="80.0" layoutX="12.0" layoutY="221.0" prefHeight="40.0" prefWidth="622.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+            <TextField fx:id="backupName" layoutX="112.0" prefHeight="30.0" prefWidth="528.0" promptText="Backup Name" AnchorPane.bottomAnchor="236.0" AnchorPane.leftAnchor="112.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+            <ButtonBar buttonMinWidth="80.0" layoutX="12.0" layoutY="221.0" prefHeight="40.0" prefWidth="626.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="14.0">
               <buttons>
-                  <Button mnemonicParsing="false" onAction="#addFile" prefWidth="193.0" text="Add File" />
+                  <Button mnemonicParsing="false" onAction="#addFile" prefWidth="193.0" text="Add File" AnchorPane.rightAnchor="0.0" />
                 <Button mnemonicParsing="false" onAction="#addFolder" text="Add Folder" />
                   <Button mnemonicParsing="false" onMouseClicked="#removeSelected" text="Remove Item" />
                   <Button mnemonicParsing="false" onMouseClicked="#save" text="Save" />
               </buttons>
             </ButtonBar>
-            <TreeTableView fx:id="fileTable" editable="true" layoutX="-4.0" layoutY="-2.0" prefHeight="211.0" prefWidth="640.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <TreeTableView fx:id="fileTable" editable="true" layoutX="-4.0" layoutY="28.0" prefHeight="177.0" prefWidth="640.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="28.0">
               <columns>
                 <TreeTableColumn fx:id="filesColumn" minWidth="320.0" prefWidth="320.0" text="File Name" />
                 <TreeTableColumn fx:id="locationsColumn" minWidth="320.0" prefWidth="320.0" text="Location" />
               </columns>
             </TreeTableView>
+            <Text layoutX="18.0" layoutY="19.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Backup Name:" wrappingWidth="94.91650390625" AnchorPane.topAnchor="6.0" />
       </children>
     </AnchorPane>
   </children>
