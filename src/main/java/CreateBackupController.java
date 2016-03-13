@@ -2,6 +2,7 @@ package archiver;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.ArrayList;
 import javafx.fxml.FXML;
 import javafx.scene.control.MenuItem;
 import javafx.fxml.FXMLLoader;
@@ -20,6 +21,9 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javax.json.*;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
 
 public class CreateBackupController {
 
@@ -60,6 +64,7 @@ public class CreateBackupController {
 	}
 	private TreeItem<FileToBackup> addFilesRecursively(File file){
 		//add file only
+		System.gc();
 		if(file.isFile()){
 			TreeItem<FileToBackup> row = new TreeItem<>(new FileToBackup(file.getName(), file.getAbsoluteFile().toString()));
 			return row;
@@ -104,26 +109,50 @@ public class CreateBackupController {
 */
     }
 	@FXML
-	private void save(){
+	private void save() throws java.io.FileNotFoundException{
 		if(backupName.getText().equals("")){
 			Alert box = new Alert(AlertType.ERROR, "You must specify a backup name!");
 			box.showAndWait();
 		}
 		else{
 			System.out.printf("Backup text: %s|\n", backupName.getText());
-			printChildren(fileTable.getRoot());
+			ArrayList<String> list = getAllChildren(fileTable.getRoot());
+			//http://stackoverflow.com/questions/18983185/how-to-create-correct-jsonarray-in-java-using-jsonobject
+			JsonObjectBuilder output = Json.createObjectBuilder().add("name", backupName.getText());
+			JsonArrayBuilder builder = Json.createArrayBuilder();
+	
+			for(String file: list){
+				builder.add(file);
+			}
+			
+			output.add("files", builder.build());
+			JsonObject jsonOutput = output.build();
+			
+			try{
+				OutputStream writer = new FileOutputStream("presets/" + backupName.getText() + ".json");
+				JsonWriter jsonWriter = Json.createWriter(writer);
+				jsonWriter.writeObject(jsonOutput);
+				jsonWriter.close();
+			}
+			catch(java.io.FileNotFoundException exc){
+				exc.printStackTrace();
+			}
+			
 		}
 	}
-    private void printChildren(TreeItem<FileToBackup> root){
+    private ArrayList<String> getAllChildren(TreeItem<FileToBackup> root){
+		ArrayList<String> list = new ArrayList<>();
 		if(root != null){
 			System.out.println("Current Parent :" + root.getValue());
 			for(TreeItem<FileToBackup> child: root.getChildren()){
 				if(child != null && child.getChildren() != null && child.getChildren().isEmpty()){
+					list.add(child.getValue().getLocation());
 					System.out.println(child.getValue().getLocation());
 				} else {
-					printChildren(child);
+					list.addAll(getAllChildren(child));
 				}
 			}
 		}
+		return list;
     }
 }
