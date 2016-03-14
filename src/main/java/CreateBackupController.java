@@ -24,6 +24,7 @@ import javafx.scene.control.Alert.AlertType;
 import javax.json.*;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
+import javafx.scene.control.ButtonType;
 
 public class CreateBackupController {
 
@@ -52,7 +53,16 @@ public class CreateBackupController {
 		chooser.setTitle("Choose Directory");
 		File directory = chooser.showDialog(null);
 		if(directory != null){
-			fileTable.getRoot().getChildren().add(addFilesRecursively(directory));
+			Alert box = new Alert(AlertType.CONFIRMATION, "Should I try to list the folder's files?");
+			box.showAndWait().ifPresent(response -> {
+				 if (response == ButtonType.OK) {
+					fileTable.getRoot().getChildren().add(addFilesRecursively(directory));
+				 }
+				else{
+					fileTable.getRoot().getChildren().add(new TreeItem<>(new FileToBackup(directory.getName(),
+						directory.getAbsoluteFile().toString())));
+				}
+			 });
 		}
     }
 	@FXML
@@ -63,6 +73,7 @@ public class CreateBackupController {
 		}
 	}
 	private TreeItem<FileToBackup> addFilesRecursively(File file){
+		System.gc();
 		//add file only
 		if(file.isFile()){
 			TreeItem<FileToBackup> row = new TreeItem<>(new FileToBackup(file.getName(), file.getAbsoluteFile().toString()));
@@ -78,13 +89,6 @@ public class CreateBackupController {
 						level.getChildren().add(addFilesRecursively(temp));
 					}
 				}
-				try{
-					Thread.sleep(50);
-				}
-				catch(InterruptedException e){
-					e.printStackTrace();
-				}
-				System.gc();
 				return level;
 		}
 		return null;

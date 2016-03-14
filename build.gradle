@@ -8,4 +8,5 @@ repositories {
 }
 dependencies{
 	compile group: 'org.glassfish', name: 'javax.json', version: '1.0.4'
+	compile group: 'net.sf.ehcache', name: 'ehcache', version: '2.10.1'
 }
