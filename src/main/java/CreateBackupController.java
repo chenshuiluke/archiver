@@ -64,7 +64,6 @@ public class CreateBackupController {
 	}
 	private TreeItem<FileToBackup> addFilesRecursively(File file){
 		//add file only
-		System.gc();
 		if(file.isFile()){
 			TreeItem<FileToBackup> row = new TreeItem<>(new FileToBackup(file.getName(), file.getAbsoluteFile().toString()));
 			return row;
@@ -79,6 +78,13 @@ public class CreateBackupController {
 						level.getChildren().add(addFilesRecursively(temp));
 					}
 				}
+				try{
+					Thread.sleep(50);
+				}
+				catch(InterruptedException e){
+					e.printStackTrace();
+				}
+				System.gc();
 				return level;
 		}
 		return null;

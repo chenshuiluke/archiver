@@ -1,5 +1,6 @@
 package archiver;
 
+import javafx.application.Platform;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.ArrayList;
@@ -148,8 +149,7 @@ public class ArchiverController{
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
-		Thread thread = new Thread(task);
-		thread.start();
+		(new Thread(task)).start();
         assert createBackup != null : "fx:id=\"createBackup\" was not injected: check your FXML file 'Archiver.fxml'.";
         assert backupList != null : "fx:id=\"backupList\" was not injected: check your FXML file 'Archiver.fxml'.";
 		initializeBackupFileList();

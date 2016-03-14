@@ -10,8 +10,35 @@ import javafx.scene.Parent;
 import javafx.application.Platform;
 
 public class Archiver extends Application{
+	public static void startSecondJVM() throws Exception {
+		String separator = System.getProperty("file.separator");
+		String classpath = System.getProperty("java.class.path");
+		String path = System.getProperty("java.home")
+				+ separator + "bin" + separator + "java";
+		ProcessBuilder processBuilder = 
+				new ProcessBuilder(path, "-Xmx1024m", "-cp",
+				classpath, "archiver.Archiver", "-isSecond");
+		Process process = processBuilder.start();
+	}
 	public static void main(String[] args){
-		Application.launch(args);	
+		boolean isSecondInstance = false;
+		for(String arg : args){
+			if(arg.equals("-isSecond")){
+				isSecondInstance = true;
+			}
+		}
+		if(!isSecondInstance){
+			try{
+				startSecondJVM();
+				System.exit(0);
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+		else{
+			Application.launch(args);	
+		}
 	}
 	public void start(Stage primaryStage){
 		primaryStage.setTitle("Archiver");
