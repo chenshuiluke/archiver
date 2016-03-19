@@ -47,73 +47,31 @@ public class ArchiverController{
 		return extension;
 	}
 	Task<Void> task = new Task<Void>(){
-			@Override
-			protected Void call() throws Exception{
-				File preset = new File("presets");
-				if(!preset.isDirectory()){
-					preset.mkdir();
-				}
-
-				Path path = preset.toPath();
-				FileSystem fs = path.getFileSystem();
-				try(WatchService service = fs.newWatchService()) {
-					
-					// We register the path to the service
-					// We watch for creation events
-					path.register(service, ENTRY_CREATE, ENTRY_DELETE);
-					
-					// Start the infinite polling loop
-					WatchKey key = null;
-					while(true) {
-						key = service.take();
+		@Override
+		protected Void call() throws Exception{
+			while(true){
+				Platform.runLater(new Runnable() {
+					@Override public void run() {
 						
-						// Dequeueing events
-						Kind<?> kind = null;
-						for(WatchEvent<?> watchEvent : key.pollEvents()) {
-							// Get the type of the event
-							kind = watchEvent.kind();
-							if (OVERFLOW == kind) {
-								continue; //loop
-							} else if (ENTRY_CREATE == kind) {
-								// A new Path was created 
-								Path newPath = ((WatchEvent<Path>) watchEvent).context();
-								// Output
-								System.out.println("New path created: " + newPath);
-								String fileName = newPath.toString();
-								String extension = getExtension(fileName);
-								if(extension.equals("json")){
-										backupList.getItems().add(fileName);
-								}
-							}
-							else if(ENTRY_DELETE == kind){
-								// A new Path was created 
-								Path newPath = ((WatchEvent<Path>) watchEvent).context();
-								// Output
-								System.out.println("path deleted: " + newPath);
-								String fileName = newPath.toString();
-								String extension = getExtension(fileName);
-								if(extension.equals("json")){
-										backupList.getItems().remove(fileName);
-								}
-							}
-						}
+							initializeBackupFileList();
+	
+									
 						
-						if(!key.reset()) {
-							break; //loop
-						}
 					}
-					
-				} 
-				catch(IOException ioe) {
-					ioe.printStackTrace();
-				} 
+				});
+							
+	    		try{
+	    			Thread.sleep(5000);
+	    			
+	    		}
+	    		
 				catch(InterruptedException ie) {
 					ie.printStackTrace();
-				}
-				return null;
+				}	
+			}
+			//return null;
 		}
 	};
-
     @FXML
     private void showCreateNewBackupWindow(){
 		try{
@@ -132,10 +90,27 @@ public class ArchiverController{
 	private void initializeBackupFileList(){
 		File presets = new File("presets");
 		if(presets.isDirectory()){
+			ObservableList<String> oldPresetList = backupList.getItems();
+			ObservableList<String> newPresetList = FXCollections.observableArrayList();
+			//backupList.getItems().removeAll(backupList.getItems());
 			String[] list = presets.list();
+
+			//Get contents of presets folder
 			for(String file : list){
 				if(getExtension(file).equals("json")){
-					backupList.getItems().add(file);
+					newPresetList.add(file);
+				}
+			}
+			//Adds any new items to the backupList
+			for(String item : newPresetList){
+				if(!oldPresetList.contains(item)){ //If the old list doesnt contain...
+					oldPresetList.add(item);
+				}
+			}
+			//Deletes any old items that were deleted from the presets folder
+			for(String item : oldPresetList){
+				if(!newPresetList.contains(item)){
+					oldPresetList.remove(item);
 				}
 			}
 

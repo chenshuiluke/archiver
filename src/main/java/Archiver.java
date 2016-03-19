@@ -16,8 +16,8 @@ public class Archiver extends Application{
 		String path = System.getProperty("java.home")
 				+ separator + "bin" + separator + "java";
 		ProcessBuilder processBuilder = 
-				new ProcessBuilder(path, "-Xmx1024m", "-cp",
-				classpath, "archiver.Archiver", "-isSecond");
+				new ProcessBuilder(path, "-Xmx1500m", "-cp",
+				classpath, "archiver.Archiver", "-isSecond").inheritIO();
 		Process process = processBuilder.start();
 	}
 	public static void main(String[] args){

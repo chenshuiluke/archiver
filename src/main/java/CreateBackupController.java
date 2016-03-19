@@ -53,7 +53,8 @@ public class CreateBackupController {
 		chooser.setTitle("Choose Directory");
 		File directory = chooser.showDialog(null);
 		if(directory != null){
-			Alert box = new Alert(AlertType.CONFIRMATION, "Should I try to list the folder's files?");
+			Alert box = new Alert(AlertType.CONFIRMATION, "Should I try to list the folder's files?"
+			 + System.getProperty("line.separator") + "It could take a while...");
 			box.showAndWait().ifPresent(response -> {
 				 if (response == ButtonType.OK) {
 					fileTable.getRoot().getChildren().add(addFilesRecursively(directory));
@@ -73,7 +74,6 @@ public class CreateBackupController {
 		}
 	}
 	private TreeItem<FileToBackup> addFilesRecursively(File file){
-		System.gc();
 		//add file only
 		if(file.isFile()){
 			TreeItem<FileToBackup> row = new TreeItem<>(new FileToBackup(file.getName(), file.getAbsoluteFile().toString()));
@@ -120,13 +120,14 @@ public class CreateBackupController {
     }
 	@FXML
 	private void save() throws java.io.FileNotFoundException{
+		ArrayList<String> list = getAllChildren(fileTable.getRoot());
 		if(backupName.getText().equals("")){
 			Alert box = new Alert(AlertType.ERROR, "You must specify a backup name!");
 			box.showAndWait();
 		}
-		else{
+		else if(list.size() > 0){
 			System.out.printf("Backup text: %s|\n", backupName.getText());
-			ArrayList<String> list = getAllChildren(fileTable.getRoot());
+			//ArrayList<String> list = getAllChildren(fileTable.getRoot());
 			//http://stackoverflow.com/questions/18983185/how-to-create-correct-jsonarray-in-java-using-jsonobject
 			JsonObjectBuilder output = Json.createObjectBuilder().add("name", backupName.getText());
 			JsonArrayBuilder builder = Json.createArrayBuilder();
@@ -148,6 +149,10 @@ public class CreateBackupController {
 				exc.printStackTrace();
 			}
 			
+		}
+		else{
+			Alert box =  new Alert(AlertType.ERROR, "You must add a file/folder before you can save!");
+			box.showAndWait();
 		}
 	}
     private ArrayList<String> getAllChildren(TreeItem<FileToBackup> root){
