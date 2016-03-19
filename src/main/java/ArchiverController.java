@@ -33,23 +33,41 @@ import java.io.FileInputStream;
 import javafx.scene.text.Text;
 import javafx.scene.control.ProgressBar;
 import javafx.concurrent.Service;
+import javafx.scene.control.Label;
+
 public class ArchiverController{
 	LoadBackupService loadBackup = new LoadBackupService();
+	@FXML
+	private ProgressBar progressBar;
+
+	@FXML
+	private ListView backupList;
+
+	@FXML 
+	private MenuItem createBackup;
+
+	@FXML
+	private Label statusText;
+
+	@FXML
+	private Text backupFileName;
+
+	@FXML
+	private ListView<String> backupFileList;
+
     @FXML
-    private ProgressBar progressBar;
-
-   	@FXML
-    private ListView backupList;
-
-    @FXML 
-    private MenuItem createBackup;
-
+    private Text fileNumberBox;
 
     @FXML
-    private Text backupFileName;
+    private Text backupDestinationBox;
 
-    @FXML
-    private ListView<String> backupFileList;
+	private void setStatusText(String status){
+		Platform.runLater(new Runnable() {
+			@Override public void run() {
+				statusText.setText(status);
+			}
+		});    	
+	}
 
 	private String getExtension(String fileName){
 		String extension = "";
@@ -70,11 +88,11 @@ public class ArchiverController{
 					}
 				});
 							
-	    		try{
-	    			Thread.sleep(10000);
-	    			
-	    		}
-	    		
+				try{
+					Thread.sleep(10000);
+					
+				}
+				
 				catch(InterruptedException ie) {
 					ie.printStackTrace();
 				}	
@@ -82,8 +100,8 @@ public class ArchiverController{
 			//return null;
 		}
 	};
-    @FXML
-    private void showCreateNewBackupWindow(){
+	@FXML
+	private void showCreateNewBackupWindow(){
 		try{
 			URL url = getClass().getClassLoader().getResource("CreateBackup.fxml");
 			Parent root1 = (Parent) FXMLLoader.load(url);
@@ -96,7 +114,7 @@ public class ArchiverController{
 			System.out.println(e.getMessage());
 		}
 
-    }
+	}
 	private void initializeBackupFileList(){
 
 		File presets = new File("presets");
@@ -127,95 +145,102 @@ public class ArchiverController{
 
 		}
 	}
-    @FXML // ResourceBundle that was given to the FXMLLoader
-    private ResourceBundle resources;
+	@FXML // ResourceBundle that was given to the FXMLLoader
+	private ResourceBundle resources;
 
-    @FXML // URL location of the FXML file that was given to the FXMLLoader
-    private URL location;
+	@FXML // URL location of the FXML file that was given to the FXMLLoader
+	private URL location;
 
-    @FXML
-    void viewBackupDetails(MouseEvent event) {
-    	//System.out.println("Hi");
+	@FXML
+	void viewBackupDetails(MouseEvent event) {
+		//System.out.println("Hi");
 
-    	//Can't call ,start() if its state is SUCCEEDED, so make a new one.
-    	if(loadBackup.getState().toString().equals("SUCCEEDED")){
-    		loadBackup = new LoadBackupService();
-    	}
-    	if(!loadBackup.getState().toString().equals("RUNNING"));
-    		loadBackup.start();
+		//Can't call ,start() if its state is SUCCEEDED, so make a new one.
+		if(loadBackup.getState().toString().equals("SUCCEEDED")){
+			loadBackup = new LoadBackupService();
+		}
+		if(!loadBackup.getState().toString().equals("RUNNING")){
+			loadBackup.start();
+		}
 
-    }
+	}
 
-    @FXML // This method is called by the FXMLLoader when initialization is complete
-    void initialize() {
+	@FXML // This method is called by the FXMLLoader when initialization is complete
+	void initialize() {
 		(new Thread(task)).start();
-        assert createBackup != null : "fx:id=\"createBackup\" was not injected: check your FXML file 'Archiver.fxml'.";
-        assert backupList != null : "fx:id=\"backupList\" was not injected: check your FXML file 'Archiver.fxml'.";
+		assert createBackup != null : "fx:id=\"createBackup\" was not injected: check your FXML file 'Archiver.fxml'.";
+		assert backupList != null : "fx:id=\"backupList\" was not injected: check your FXML file 'Archiver.fxml'.";
 		initializeBackupFileList();
-    }
-    private void toggleProgressBar(){
+	}
+	private void toggleProgressBar(){
 		Platform.runLater(new Runnable() {
 			@Override public void run() {
 				progressBar.setVisible(!progressBar.isVisible());
 			}
 		});    	
-    }
-    private class LoadBackupService extends Service<Void> {
+	}
+	private class LoadBackupService extends Service<Void> {
  
-        @Override
-        protected Task<Void> createTask() {
-            return new Task<Void>() {
-                @Override
-                protected Void call() throws Exception {
-                	toggleProgressBar();
-			    	String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
-			    	if(selectedItem != null){
+		@Override
+		protected Task<Void> createTask() {
+			return new Task<Void>() {
+				@Override
+				protected Void call() throws Exception {
+					toggleProgressBar();
+					String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
+					if(selectedItem != null){
 
-			    		File backupFile = new File("presets/" + selectedItem);
-			    		if(backupFile.isFile()){
-			      			System.out.println(backupFile.getAbsoluteFile().toString());  
-			      			//http://www.journaldev.com/2315/java-json-processing-api-example-tutorial
-			      			try{
+						File backupFile = new File("presets/" + selectedItem);
+						if(backupFile.isFile()){
+							System.out.println(backupFile.getAbsoluteFile().toString());  
+							//http://www.journaldev.com/2315/java-json-processing-api-example-tutorial
+							try{
+								setStatusText("Reading json file.");
 
-			 	     			Platform.runLater(new Runnable() {
+								FileInputStream jsonInputStream = new FileInputStream(backupFile);
+								JsonReader jsonReader = Json.createReader(jsonInputStream);      				
+								JsonObject jsonFileContent = jsonReader.readObject();
+
+								jsonInputStream.close();
+								jsonReader.close();
+								
+								System.out.println(jsonFileContent.getString("name"));
+								backupFileName.setText("Name: " + jsonFileContent.getString("name"));
+								JsonArray jsonBackupFilesArray = jsonFileContent.getJsonArray("files");
+								
+								setStatusText("Clearing current list.");
+								Platform.runLater(new Runnable() {
 									@Override public void run() {
-										backupFileList.getItems().clear();			 	     					
-			 	     				}
-			 	     			});
+										backupFileList.getItems().clear();	
+										fileNumberBox.setText("No. Files: " + String.valueOf(jsonBackupFilesArray.size()));
+										backupDestinationBox.setText("Destination: " + "destination");
+									}
+								});
 
-			 	     			FileInputStream jsonInputStream = new FileInputStream(backupFile);
-			 	     			JsonReader jsonReader = Json.createReader(jsonInputStream);      				
-			 	     			JsonObject jsonFileContent = jsonReader.readObject();
-			 	     			jsonInputStream.close();
-			 	     			jsonReader.close();
-			 	     			System.out.println(jsonFileContent.getString("name"));
-			 	     			backupFileName.setText(jsonFileContent.getString("name"));
-			 	     			JsonArray jsonBackupFilesArray = jsonFileContent.getJsonArray("files");
-			 	     			
-
-			 	     			for(JsonValue file : jsonBackupFilesArray){
-			 	     				String current = file.toString().replaceAll("\"","");
-			 	     				Platform.runLater(new Runnable(){
-			 	     					@Override public void run(){
-			 	     						backupFileList.getItems().add(current);
-			 	     					}
-			 	     				});
-			 	     			}
-
-			 	     			System.gc();
-			      			}			
+								setStatusText("Populating ListView.");
+								for(JsonValue file : jsonBackupFilesArray){
+									String current = file.toString().replaceAll("\"","");
+									Platform.runLater(new Runnable(){
+										@Override public void run(){
+											backupFileList.getItems().add(current);
+										}
+									});
+								}
+								setStatusText("Done.");
+								System.gc();
+							}			
 							catch(IOException  exc){
 								exc.printStackTrace();
 							}
-			    		}
-			    		else{
-			    			backupFileName.setText("");
-			    		}
-			    	}
-			    	toggleProgressBar();
-                    return null;
-                }
-            };
-        }
-    }
+						}
+						else{
+							backupFileName.setText("");
+						}
+					}
+					toggleProgressBar();
+					return null;
+				}
+			};
+		}
+	}
 }

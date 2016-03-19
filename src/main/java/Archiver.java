@@ -28,7 +28,7 @@ public class Archiver extends Application{
 			}
 		}
 		if(!isSecondInstance){
-			
+			/*			
 			try{
 				startSecondJVM();
 				System.exit(0);
@@ -36,9 +36,9 @@ public class Archiver extends Application{
 			catch(Exception e){
 				e.printStackTrace();
 			}
-			/*
-			Application.launch(args);
 			*/	
+			Application.launch(args);
+
 		}
 		else{
 			Application.launch(args);	
