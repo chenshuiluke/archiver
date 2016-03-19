@@ -6,7 +6,6 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -15,6 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.paint.Color?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
 
 <VBox prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="archiver.ArchiverController">
   <children>
@@ -46,12 +46,12 @@
         </Menu>
       </menus>
     </MenuBar>
-    <SplitPane dividerPositions="0.2505567928730512, 0.7505567928730512" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
+    <SplitPane dividerPositions="0.2505567928730512, 0.8129175946547884" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
       <items>
         <AnchorPane>
           <children>
-                  <ListView fx:id="backupList" layoutX="-24.0" layoutY="37.0" prefHeight="512.0" prefWidth="221.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="37.0" />
-            <Label alignment="CENTER" layoutY="4.0" minWidth="60.0" prefHeight="21.0" prefWidth="172.0" style="&#10;" text="Existing Backups" textAlignment="CENTER" wrapText="false">
+                  <ListView fx:id="backupList" layoutX="-24.0" layoutY="37.0" onMouseClicked="#viewBackupDetails" prefHeight="512.0" prefWidth="221.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="37.0" />
+            <Label alignment="CENTER" layoutY="4.0" minWidth="60.0" prefHeight="21.0" prefWidth="172.0" style="&#10;" text="Existing Backups" textAlignment="CENTER" wrapText="false" AnchorPane.topAnchor="0.0">
               <font>
                 <Font size="18.0" fx:id="x1" />
               </font>
@@ -61,18 +61,23 @@
             </Label>
           </children>
         </AnchorPane>
-        <ScrollPane prefHeight="-1.0" prefWidth="-1.0">
-          <content>
-            <AnchorPane id="Content" minHeight="-1.0" minWidth="-1.0" prefHeight="545.0" prefWidth="430.0">
-              <children>
-                <Label alignment="CENTER" font="$x1" layoutX="14.0" layoutY="14.0" style="&#10;" text="View" textAlignment="CENTER" textFill="$x2" wrapText="false" />
-              </children>
-            </AnchorPane>
-          </content>
-        </ScrollPane>
+            <VBox prefHeight="200.0" prefWidth="296.0">
+               <children>
+                  <Label alignment="CENTER" minWidth="60.0" prefHeight="21.0" prefWidth="172.0" style="&#10;" text="Backup View" textAlignment="CENTER" wrapText="false">
+                     <font>
+                        <Font size="18.0" fx:id="x11" />
+                     </font>
+                     <textFill>
+                        <Color blue="0.624" green="0.624" red="0.624" fx:id="x21" />
+                     </textFill>
+                  </Label>
+                  <Text fx:id="backupFileName" strokeType="OUTSIDE" strokeWidth="0.0" text="BackupName" />
+                  <ListView fx:id="backupFileList" prefHeight="548.0" prefWidth="497.0" />
+               </children>
+            </VBox>
         <AnchorPane>
           <children>
-            <Label alignment="CENTER" font="$x1" layoutX="14.0" layoutY="14.0" style="&#10;" text="Details" textAlignment="CENTER" textFill="$x2" wrapText="false" />
+            <Label alignment="CENTER" font="$x1" layoutX="14.0" layoutY="14.0" style="&#10;" text="Details" textAlignment="CENTER" textFill="$x2" wrapText="false" AnchorPane.topAnchor="0.0" />
           </children>
         </AnchorPane>
       </items>

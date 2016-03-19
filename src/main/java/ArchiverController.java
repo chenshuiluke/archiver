@@ -30,6 +30,11 @@ import javafx.scene.control.ListView;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.scene.input.MouseEvent;
+import javax.json.*;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import javafx.scene.text.Text;
 
 public class ArchiverController{
 
@@ -38,6 +43,14 @@ public class ArchiverController{
 
     @FXML 
     private MenuItem createBackup;
+
+
+    @FXML
+    private Text backupFileName;
+
+    @FXML
+    private ListView<String> backupFileList;
+
 	private String getExtension(String fileName){
 		String extension = "";
 		int indexOfDot = fileName.lastIndexOf(".");
@@ -52,16 +65,13 @@ public class ArchiverController{
 			while(true){
 				Platform.runLater(new Runnable() {
 					@Override public void run() {
-						
-							initializeBackupFileList();
-	
-									
+							initializeBackupFileList();						
 						
 					}
 				});
 							
 	    		try{
-	    			Thread.sleep(5000);
+	    			Thread.sleep(10000);
 	    			
 	    		}
 	    		
@@ -121,6 +131,42 @@ public class ArchiverController{
 
     @FXML // URL location of the FXML file that was given to the FXMLLoader
     private URL location;
+
+    @FXML
+    void viewBackupDetails(MouseEvent event) {
+    	//System.out.println("Hi");
+    	String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
+    	if(selectedItem != null){
+
+    		File backupFile = new File("presets/" + selectedItem);
+    		if(backupFile.isFile()){
+      			System.out.println(backupFile.getAbsoluteFile().toString());  
+      			//http://www.journaldev.com/2315/java-json-processing-api-example-tutorial
+      			try{
+ 	     			FileInputStream jsonInputStream = new FileInputStream(backupFile);
+ 	     			JsonReader jsonReader = Json.createReader(jsonInputStream);      				
+ 	     			JsonObject jsonFileContent = jsonReader.readObject();
+ 	     			jsonInputStream.close();
+ 	     			jsonReader.close();
+ 	     			System.out.println(jsonFileContent.getString("name"));
+ 	     			backupFileName.setText(jsonFileContent.getString("name"));
+ 	     			JsonArray jsonBackupFilesArray = jsonFileContent.getJsonArray("files");
+ 	     			backupFileList.getItems().removeAll(backupFileList.getItems());
+ 	     			for(JsonValue file : jsonBackupFilesArray){
+ 	     				String current = file.toString().replaceAll("\"","");
+ 	     				backupFileList.getItems().add(current);
+ 	     				System.gc();
+ 	     			}
+      			}			
+				catch(IOException exc){
+					exc.printStackTrace();
+				}
+    		}
+    		else{
+    			backupFileName.setText("");
+    		}
+    	}
+    }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
