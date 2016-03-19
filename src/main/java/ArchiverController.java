@@ -11,10 +11,6 @@ import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.Parent;
 
-import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 import java.io.File;
 
 import java.io.IOException;
@@ -35,8 +31,12 @@ import javax.json.*;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import javafx.scene.text.Text;
-
+import javafx.scene.control.ProgressBar;
+import javafx.concurrent.Service;
 public class ArchiverController{
+	LoadBackupService loadBackup = new LoadBackupService();
+    @FXML
+    private ProgressBar progressBar;
 
    	@FXML
     private ListView backupList;
@@ -98,6 +98,7 @@ public class ArchiverController{
 
     }
 	private void initializeBackupFileList(){
+
 		File presets = new File("presets");
 		if(presets.isDirectory()){
 			ObservableList<String> oldPresetList = backupList.getItems();
@@ -135,37 +136,14 @@ public class ArchiverController{
     @FXML
     void viewBackupDetails(MouseEvent event) {
     	//System.out.println("Hi");
-    	String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
-    	if(selectedItem != null){
 
-    		File backupFile = new File("presets/" + selectedItem);
-    		if(backupFile.isFile()){
-      			System.out.println(backupFile.getAbsoluteFile().toString());  
-      			//http://www.journaldev.com/2315/java-json-processing-api-example-tutorial
-      			try{
- 	     			FileInputStream jsonInputStream = new FileInputStream(backupFile);
- 	     			JsonReader jsonReader = Json.createReader(jsonInputStream);      				
- 	     			JsonObject jsonFileContent = jsonReader.readObject();
- 	     			jsonInputStream.close();
- 	     			jsonReader.close();
- 	     			System.out.println(jsonFileContent.getString("name"));
- 	     			backupFileName.setText(jsonFileContent.getString("name"));
- 	     			JsonArray jsonBackupFilesArray = jsonFileContent.getJsonArray("files");
- 	     			backupFileList.getItems().removeAll(backupFileList.getItems());
- 	     			for(JsonValue file : jsonBackupFilesArray){
- 	     				String current = file.toString().replaceAll("\"","");
- 	     				backupFileList.getItems().add(current);
- 	     				System.gc();
- 	     			}
-      			}			
-				catch(IOException exc){
-					exc.printStackTrace();
-				}
-    		}
-    		else{
-    			backupFileName.setText("");
-    		}
+    	//Can't call ,start() if its state is SUCCEEDED, so make a new one.
+    	if(loadBackup.getState().toString().equals("SUCCEEDED")){
+    		loadBackup = new LoadBackupService();
     	}
+    	if(!loadBackup.getState().toString().equals("RUNNING"));
+    		loadBackup.start();
+
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -174,5 +152,70 @@ public class ArchiverController{
         assert createBackup != null : "fx:id=\"createBackup\" was not injected: check your FXML file 'Archiver.fxml'.";
         assert backupList != null : "fx:id=\"backupList\" was not injected: check your FXML file 'Archiver.fxml'.";
 		initializeBackupFileList();
+    }
+    private void toggleProgressBar(){
+		Platform.runLater(new Runnable() {
+			@Override public void run() {
+				progressBar.setVisible(!progressBar.isVisible());
+			}
+		});    	
+    }
+    private class LoadBackupService extends Service<Void> {
+ 
+        @Override
+        protected Task<Void> createTask() {
+            return new Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                	toggleProgressBar();
+			    	String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
+			    	if(selectedItem != null){
+
+			    		File backupFile = new File("presets/" + selectedItem);
+			    		if(backupFile.isFile()){
+			      			System.out.println(backupFile.getAbsoluteFile().toString());  
+			      			//http://www.journaldev.com/2315/java-json-processing-api-example-tutorial
+			      			try{
+
+			 	     			Platform.runLater(new Runnable() {
+									@Override public void run() {
+										backupFileList.getItems().clear();			 	     					
+			 	     				}
+			 	     			});
+
+			 	     			FileInputStream jsonInputStream = new FileInputStream(backupFile);
+			 	     			JsonReader jsonReader = Json.createReader(jsonInputStream);      				
+			 	     			JsonObject jsonFileContent = jsonReader.readObject();
+			 	     			jsonInputStream.close();
+			 	     			jsonReader.close();
+			 	     			System.out.println(jsonFileContent.getString("name"));
+			 	     			backupFileName.setText(jsonFileContent.getString("name"));
+			 	     			JsonArray jsonBackupFilesArray = jsonFileContent.getJsonArray("files");
+			 	     			
+
+			 	     			for(JsonValue file : jsonBackupFilesArray){
+			 	     				String current = file.toString().replaceAll("\"","");
+			 	     				Platform.runLater(new Runnable(){
+			 	     					@Override public void run(){
+			 	     						backupFileList.getItems().add(current);
+			 	     					}
+			 	     				});
+			 	     			}
+
+			 	     			System.gc();
+			      			}			
+							catch(IOException  exc){
+								exc.printStackTrace();
+							}
+			    		}
+			    		else{
+			    			backupFileName.setText("");
+			    		}
+			    	}
+			    	toggleProgressBar();
+                    return null;
+                }
+            };
+        }
     }
 }
