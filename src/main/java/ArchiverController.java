@@ -189,6 +189,7 @@ public class ArchiverController{
 			setBackupButtonDisable(false);		
 			runningBackupProgressBar.progressProperty().unbind();
 			runningBackupProgressBar.setProgress(0.0F);
+			backupProgressText.textProperty().unbind();
 			setBackupProgressText("");
 		}
 
@@ -218,6 +219,7 @@ public class ArchiverController{
     		runningBackupProgressBar.progressProperty().bind(backupToRunningBackupThreadMap.get(backupName).progressProperty());
     		backupToRunningBackupThreadMap.get(backupName).start();
     		backupProgressText.textProperty().unbind();
+    		setBackupProgressText("");
 			backupProgressText.textProperty().bind(backupToRunningBackupThreadMap.get(backupName).messageProperty());
 
     		backupToRunningBackupThreadMap.get(backupName).setOnSucceeded(
@@ -257,7 +259,7 @@ public class ArchiverController{
 	private void setBackupProgressText(String text){
 		Platform.runLater(new Runnable(){
 			@Override public void run(){
-				//backupProgressText.setText(text);
+				backupProgressText.setText(text);
 			}
 		});
 	}

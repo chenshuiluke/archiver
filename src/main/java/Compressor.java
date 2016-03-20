@@ -63,7 +63,8 @@ public class Compressor extends Service<Void>
                         String file = fileList.get(counter);
                         try{                
                             updateProgress(counter, fileList.size());
-                            updateMessage(file);
+                            updateMessage(String.valueOf(counter) + "/" + String.valueOf(fileList.size())
+                             + System.getProperty("line.separator") + file);
                             clearLine();
                             timeDiffs += (endTime - startTime)/1000000000;
                             double eta = estimatedTimeRemaining(timeDiffs, counter, fileList.size());
@@ -130,6 +131,7 @@ public class Compressor extends Service<Void>
                     ex.printStackTrace();   
                 }
                 updateProgress(0, fileList.size());
+                updateMessage("Done!");
                 return null;
             }
         };
