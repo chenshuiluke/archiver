@@ -143,7 +143,12 @@ public class CreateBackupController {
 			JsonObject jsonOutput = output.build();
 
 			try{
-        Files.createDirectory(Paths.get("presets"));
+        File presetFolder = new File("presets");
+        
+        if(!presetFolder.isDirectory()){
+          Files.createDirectory(Paths.get("presets"));
+        }
+
 				OutputStream writer = new FileOutputStream("presets/" + backupName.getText() + ".json");
 				JsonWriter jsonWriter = Json.createWriter(writer);
 				jsonWriter.writeObject(jsonOutput);
