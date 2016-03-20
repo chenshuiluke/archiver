@@ -34,6 +34,7 @@ import javafx.scene.text.Text;
 import javafx.scene.control.ProgressBar;
 import javafx.concurrent.Service;
 import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 
 public class ArchiverController{
 	LoadBackupService loadBackup = new LoadBackupService();
@@ -61,6 +62,9 @@ public class ArchiverController{
     @FXML
     private Text backupDestinationBox;
 
+    @FXML
+    private Button runBackupButton;
+
 	private void setStatusText(String status){
 		Platform.runLater(new Runnable() {
 			@Override public void run() {
@@ -68,7 +72,13 @@ public class ArchiverController{
 			}
 		});    	
 	}
-
+	private void setBackupButtonDisable(boolean value){
+		Platform.runLater(new Runnable() {
+			@Override public void run() {
+				runBackupButton.setDisable(value);
+			}
+		});    			
+	}
 	private String getExtension(String fileName){
 		String extension = "";
 		int indexOfDot = fileName.lastIndexOf(".");
@@ -154,13 +164,14 @@ public class ArchiverController{
 	@FXML
 	void viewBackupDetails(MouseEvent event) {
 		//System.out.println("Hi");
-
+		setBackupButtonDisable(true);
 		//Can't call ,start() if its state is SUCCEEDED, so make a new one.
 		if(loadBackup.getState().toString().equals("SUCCEEDED")){
 			loadBackup = new LoadBackupService();
 		}
 		if(!loadBackup.getState().toString().equals("RUNNING")){
-			loadBackup.start();
+			loadBackup.start();	
+			setBackupButtonDisable(false);		
 		}
 
 	}
@@ -187,6 +198,7 @@ public class ArchiverController{
 				@Override
 				protected Void call() throws Exception {
 					toggleProgressBar();
+					setBackupButtonDisable(true);
 					String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
 					if(selectedItem != null){
 
@@ -238,6 +250,7 @@ public class ArchiverController{
 						}
 					}
 					toggleProgressBar();
+					setBackupButtonDisable(false);
 					return null;
 				}
 			};
