@@ -227,7 +227,7 @@ public class ArchiverController{
     void runBackup() {
  		String backupName = backupFileName.getText();
  		String backupDestination = backupDestinationBox.getText();
- 		String backupOutputFile = backupDestination + "/" + backupName;
+ 		String backupOutputFile = backupDestination + File.separator + backupName;
     	ArrayList<String> tempList = new ArrayList<>();
     	tempList.addAll(backupFileList.getItems());
     	//If no backup job is running for the current backup...
