@@ -202,11 +202,14 @@ public class Compressor
             //add file only
         if(node.isFile()){
             list.add(generateZipEntry(node.getPath()));
-        }            
+        }
         else if(node.isDirectory()){
             String[] subNote = node.list();
-            for(String filename : subNote){
-                list.addAll(generateFileList(new File(node, filename), 0));
+
+            if(subNote != null){
+                for(String filename : subNote){
+                    list.addAll(generateFileList(new File(node, filename), 0));
+                }
             }
         }
         return list;
@@ -217,6 +220,6 @@ public class Compressor
      * @return Formatted file path
      */
     private String generateZipEntry(String file){
-    	return file.substring(sourceFolder.length()+1, file.length());
+    	return file;
     }
 }

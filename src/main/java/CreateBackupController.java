@@ -195,7 +195,7 @@ public class CreateBackupController {
 			for(TreeItem<FileToBackup> child: root.getChildren()){
 				if(child != null && child.getChildren() != null && child.getChildren().isEmpty()){
 					list.add(child.getValue().getLocation());
-					System.out.println(child.getValue().getLocation());
+			//		System.out.println(child.getValue().getLocation());
 				} else {
 					list.addAll(getAllChildren(child));
 				}
