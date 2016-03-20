@@ -91,9 +91,10 @@
                      </font>
                   </Text>
                   <Text fx:id="fileNumberBox" strokeType="OUTSIDE" strokeWidth="0.0" text="No. Files: " />
-                  <Text fx:id="backupDestinationBox" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Destination: " />
+                  <Text fx:id="backupDestinationBox" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Destination: " wrappingWidth="287.10986328125" />
                   <Button fx:id="runBackupButton" disable="true" mnemonicParsing="false" onAction="#runBackup" text="Backup" />
-                  <ProgressBar fx:id="runningBackupProgressBar" prefWidth="200.0" progress="0.0" />
+                  <ProgressBar fx:id="runningBackupProgressBar" prefHeight="20.0" prefWidth="289.0" progress="0.0" />
+                  <Text fx:id="backupProgressText" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="288.0" />
                </children>
             </VBox>
       </items>

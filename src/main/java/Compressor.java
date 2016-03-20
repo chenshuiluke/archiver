@@ -63,7 +63,7 @@ public class Compressor extends Service<Void>
                         String file = fileList.get(counter);
                         try{                
                             updateProgress(counter, fileList.size());
-                            updateMessage("Hi");
+                            updateMessage(file);
                             clearLine();
                             timeDiffs += (endTime - startTime)/1000000000;
                             double eta = estimatedTimeRemaining(timeDiffs, counter, fileList.size());

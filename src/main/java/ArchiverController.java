@@ -171,6 +171,10 @@ public class ArchiverController{
 	@FXML // URL location of the FXML file that was given to the FXMLLoader
 	private URL location;
 
+
+    @FXML
+    private Text backupProgressText;
+
 	@FXML
 	void viewBackupDetails(MouseEvent event) {
 		//System.out.println("Hi");
@@ -185,7 +189,7 @@ public class ArchiverController{
 			setBackupButtonDisable(false);		
 			runningBackupProgressBar.progressProperty().unbind();
 			runningBackupProgressBar.setProgress(0.0F);
-
+			setBackupProgressText("");
 		}
 
 	}
@@ -213,7 +217,8 @@ public class ArchiverController{
     		runningBackupProgressBar.progressProperty().unbind();
     		runningBackupProgressBar.progressProperty().bind(backupToRunningBackupThreadMap.get(backupName).progressProperty());
     		backupToRunningBackupThreadMap.get(backupName).start();
-
+    		backupProgressText.textProperty().unbind();
+			backupProgressText.textProperty().bind(backupToRunningBackupThreadMap.get(backupName).messageProperty());
 
     		backupToRunningBackupThreadMap.get(backupName).setOnSucceeded(
     			new EventHandler<WorkerStateEvent>() {
@@ -247,6 +252,26 @@ public class ArchiverController{
 				progressBar.setVisible(value);
 			}
 		});    			
+	}
+
+	private void setBackupProgressText(String text){
+		Platform.runLater(new Runnable(){
+			@Override public void run(){
+				//backupProgressText.setText(text);
+			}
+		});
+	}
+
+	private void updateProgressTextToThread(){
+		Platform.runLater(new Runnable(){
+			@Override public void run() {
+				backupProgressText.setText(backupToRunningBackupThreadMap.get(backupFileName.getText()).getMessage());
+				
+				backupProgressText.textProperty().unbind();
+				backupProgressText.textProperty().bind(backupToRunningBackupThreadMap
+					.get(backupFileName.getText()).messageProperty());			
+			}
+		});
 	}
 
 	private void updateProgressBarToThread(){
@@ -323,6 +348,7 @@ public class ArchiverController{
 					}
 					if(backupToRunningBackupThreadMap.get(backupFileName.getText()) != null){
 						updateProgressBarToThread();
+						updateProgressTextToThread();
 					}
 					else{
 						//setStatusText("Not found");
