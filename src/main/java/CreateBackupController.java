@@ -27,6 +27,10 @@ import java.io.FileOutputStream;
 import javafx.scene.control.ButtonType;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.control.Button;
+
+
 public class CreateBackupController {
 
     @FXML
@@ -35,6 +39,21 @@ public class CreateBackupController {
 	private TreeTableColumn<FileToBackup, String> filesColumn;
 	@FXML
 	private TreeTableColumn<FileToBackup, String> locationsColumn;
+
+	private String backupDestination = "";
+
+    @FXML
+    private Button destinationButton;
+
+    @FXML
+    void setDestination() {
+    	DirectoryChooser chooseDestination = new DirectoryChooser();
+    	chooseDestination.setTitle("Choose backup destination");
+    	File destination = chooseDestination.showDialog(null);
+    	if(destination != null){
+    		backupDestination = destination.getAbsoluteFile().toString();
+    	}
+    }
 
     @FXML
 	private TextField backupName;
@@ -127,12 +146,17 @@ public class CreateBackupController {
 			Alert box = new Alert(AlertType.ERROR, "You must specify a backup name!");
 			box.showAndWait();
 		}
+		else if(backupDestination.equals("")){
+			Alert box = new Alert(AlertType.ERROR, "Choose a backup destination.");
+			box.showAndWait();
+		}
 		else if(numberOfDirectRootChildren > 0){
 			ArrayList<String> list = getAllChildren(fileTable.getRoot());
 			System.out.printf("Backup text: %s|\n", backupName.getText());
 			//ArrayList<String> list = getAllChildren(fileTable.getRoot());
 			//http://stackoverflow.com/questions/18983185/how-to-create-correct-jsonarray-in-java-using-jsonobject
 			JsonObjectBuilder output = Json.createObjectBuilder().add("name", backupName.getText());
+			output.add("destination", backupDestination);
 			JsonArrayBuilder builder = Json.createArrayBuilder();
 
 			for(String file: list){
@@ -143,11 +167,11 @@ public class CreateBackupController {
 			JsonObject jsonOutput = output.build();
 
 			try{
-        File presetFolder = new File("presets");
-        
-        if(!presetFolder.isDirectory()){
-          Files.createDirectory(Paths.get("presets"));
-        }
+		        File presetFolder = new File("presets");
+		        
+		        if(!presetFolder.isDirectory()){
+		          Files.createDirectory(Paths.get("presets"));
+		        }
 
 				OutputStream writer = new FileOutputStream("presets/" + backupName.getText() + ".json");
 				JsonWriter jsonWriter = Json.createWriter(writer);

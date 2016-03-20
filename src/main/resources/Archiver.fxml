@@ -92,7 +92,7 @@
                   </Text>
                   <Text fx:id="fileNumberBox" strokeType="OUTSIDE" strokeWidth="0.0" text="No. Files: " />
                   <Text fx:id="backupDestinationBox" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Destination: " />
-                  <Button fx:id="runBackupButton" disable="true" mnemonicParsing="false" text="Backup" />
+                  <Button fx:id="runBackupButton" disable="true" mnemonicParsing="false" onAction="#runBackup" text="Backup" />
                </children>
             </VBox>
       </items>

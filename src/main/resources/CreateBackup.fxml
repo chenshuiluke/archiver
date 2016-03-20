@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox prefHeight="255.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="archiver.CreateBackupController">
+<VBox prefHeight="255.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="archiver.CreateBackupController">
   <children>
     <AnchorPane maxHeight="-1.0" maxWidth="-1.0" prefHeight="306.0" prefWidth="640.0" VBox.vgrow="ALWAYS">
       <children>
@@ -20,6 +20,7 @@
                 <Button mnemonicParsing="false" onAction="#addFolder" text="Add Folder" />
                   <Button mnemonicParsing="false" onMouseClicked="#removeSelected" text="Remove Item" />
                   <Button mnemonicParsing="false" onMouseClicked="#save" text="Save" />
+                  <Button fx:id="destinationButton" mnemonicParsing="false" onAction="#setDestination" text="Set Destination" />
               </buttons>
             </ButtonBar>
             <TreeTableView fx:id="fileTable" editable="true" layoutX="-4.0" layoutY="28.0" prefHeight="177.0" prefWidth="640.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="28.0">

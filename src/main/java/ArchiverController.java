@@ -183,6 +183,15 @@ public class ArchiverController{
 		assert backupList != null : "fx:id=\"backupList\" was not injected: check your FXML file 'Archiver.fxml'.";
 		initializeBackupFileList();
 	}
+
+    @FXML
+    void runBackup() {
+    	ArrayList<String> tempList = new ArrayList<>();
+    	tempList.addAll(backupFileList.getItems());
+    	Compressor temp = new Compressor(tempList, backupFileName.getText(), true);
+    	temp.compress(0);
+    }
+
 	private void toggleProgressBar(){
 		Platform.runLater(new Runnable() {
 			@Override public void run() {
@@ -218,6 +227,7 @@ public class ArchiverController{
 								
 								System.out.println(jsonFileContent.getString("name"));
 								backupFileName.setText("Name: " + jsonFileContent.getString("name"));
+								backupDestinationBox.setText("Destination: " + jsonFileContent.getString("destination"));
 								JsonArray jsonBackupFilesArray = jsonFileContent.getJsonArray("files");
 								
 								setStatusText("Clearing current list.");
@@ -225,7 +235,7 @@ public class ArchiverController{
 									@Override public void run() {
 										backupFileList.getItems().clear();	
 										fileNumberBox.setText("No. Files: " + String.valueOf(jsonBackupFilesArray.size()));
-										backupDestinationBox.setText("Destination: " + "destination");
+										
 									}
 								});
 

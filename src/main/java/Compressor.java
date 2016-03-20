@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -22,20 +24,51 @@ public class Compressor
 	*@param outputZipFile the location of the new zip file
 	*@param setZipExtension determines whether or not a ".zip" is appended to outputZipFile	
 	*/
+    void initVariables(String outputZipFile, boolean setZipExtension){
+        this.sourceFolder = sourceFolder;
+        if(setZipExtension)
+            this.outputZipFile = outputZipFile + ".zip";
+        else
+            this.outputZipFile = outputZipFile;       
+    }
     Compressor(String sourceFolder, String outputZipFile, boolean setZipExtension){
 		fileList = new ArrayList<String>();
-		this.sourceFolder = sourceFolder;
-		if(setZipExtension)
-			this.outputZipFile = outputZipFile + ".zip";
-		else
-			this.outputZipFile = outputZipFile;
+        initVariables(outputZipFile, setZipExtension);
+    }
+    Compressor(ArrayList<String> newFileList, String outputZipFile, boolean setZipExtension){
+        fileList = newFileList;
+        initVariables(outputZipFile, setZipExtension);
     }
 	void compress(int compressionLevel){
         if(compressionLevel < 0 || compressionLevel > 9){
             System.out.println("Compression level must be 0-9");
             return;
         }
-    	generateFileList(new File(sourceFolder));
+
+        if(fileList.size() == 0){
+            generateFileList(new File(sourceFolder));
+        }
+    	else{
+            Set<String> listWithoutDuplicates = new HashSet<>();
+            listWithoutDuplicates.addAll(fileList);
+            fileList.clear();
+            fileList.addAll(listWithoutDuplicates);
+            ArrayList<String> toRemove = new ArrayList<>();
+            ArrayList<String> toAdd = new ArrayList<>();
+            for(String file : fileList){
+                File temp = new File(file);
+                if(temp.canRead()){
+                    if(temp.isDirectory()){
+                        toAdd.addAll(generateFileList(temp, 0));
+                    }
+                }
+                else{
+                    System.out.println("Cannot read " + file);
+                }
+            }
+            fileList.removeAll(toRemove);
+            fileList.addAll(toAdd);
+        }
     	zipIt(outputZipFile, compressionLevel);
 	}
     private void clearLine(){
@@ -88,9 +121,12 @@ public class Compressor
                 ZipEntry ze= new ZipEntry(file);
                 zos.putNextEntry(ze);
                    
+                /*
                 FileInputStream in = 
                            new FileInputStream(sourceFolder + File.separator + file);
-               
+                */
+                FileInputStream in = 
+                           new FileInputStream(file);
                 int len;
                 while ((len = in.read(buffer)) > 0) {
                     zos.write(buffer, 0, len);
@@ -105,10 +141,11 @@ public class Compressor
                 }
             }
             catch(FileNotFoundException exc){
-                System.out.println("\nError reading " + file);
+                exc.printStackTrace();
+                //System.out.println("\nError reading " + file);
             }
             catch(IOException exc){
-                System.out.println("\nFile too large: " + file);
+                exc.printStackTrace();
             }
 
         }
@@ -147,21 +184,33 @@ public class Compressor
      * @param node file or directory
      */
     public void generateFileList(File node){
-
-    	//add file only
-	if(node.isFile()){
-		fileList.add(generateZipEntry(node.getPath()));
-	}
-		
-	if(node.isDirectory()){
-		String[] subNote = node.list();
-		for(String filename : subNote){
-			generateFileList(new File(node, filename));
-		}
-	}
- 
+        	//add file only
+    	if(node.isFile()){
+    		fileList.add(generateZipEntry(node.getPath()));
+    	}
+    		
+    	if(node.isDirectory()){
+    		String[] subNote = node.list();
+    		for(String filename : subNote){
+    			generateFileList(new File(node, filename));
+    		}
+    	}     
     }
 
+    public ArrayList<String> generateFileList(File node, int useless){
+        ArrayList<String> list = new ArrayList<>();
+            //add file only
+        if(node.isFile()){
+            list.add(generateZipEntry(node.getPath()));
+        }            
+        else if(node.isDirectory()){
+            String[] subNote = node.list();
+            for(String filename : subNote){
+                list.addAll(generateFileList(new File(node, filename), 0));
+            }
+        }
+        return list;
+    }
     /**
      * Format the file path for zip
      * @param file file path
