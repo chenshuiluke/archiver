@@ -120,12 +120,14 @@ public class CreateBackupController {
     }
 	@FXML
 	private void save() throws java.io.FileNotFoundException{
-		ArrayList<String> list = getAllChildren(fileTable.getRoot());
+		//Checks the number of added files/folders:
+		int numberOfDirectRootChildren = fileTable.getRoot().getChildren().size();
 		if(backupName.getText().equals("")){
 			Alert box = new Alert(AlertType.ERROR, "You must specify a backup name!");
 			box.showAndWait();
 		}
-		else if(list.size() > 0){
+		else if(numberOfDirectRootChildren > 0){
+			ArrayList<String> list = getAllChildren(fileTable.getRoot());
 			System.out.printf("Backup text: %s|\n", backupName.getText());
 			//ArrayList<String> list = getAllChildren(fileTable.getRoot());
 			//http://stackoverflow.com/questions/18983185/how-to-create-correct-jsonarray-in-java-using-jsonobject
