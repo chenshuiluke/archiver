@@ -4,8 +4,8 @@ presets/*
 ### Gradle ###
 .gradle
 build/
-!build/libs/
-build/libs/presets
+!build/libs/archiver-all.jar
+
 # Ignore Gradle GUI config
 gradle-app.setting
 
