@@ -11,13 +11,15 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import javafx.concurrent.Task;
+import javafx.concurrent.Service;
 
-public class Compressor
+public class Compressor extends Service<Void>
 {
     ArrayList<String> fileList;
     private static String outputZipFile;
     private static String sourceFolder = null;
-	
+	private static int compressionLevel = 0;
 	/**
 	*AppZip
 	*@param sourceFolder directory to read files from
@@ -39,12 +41,106 @@ public class Compressor
         fileList = newFileList;
         initVariables(outputZipFile, setZipExtension);
     }
-	void compress(int compressionLevel){
-        if(compressionLevel < 0 || compressionLevel > 9){
+    @Override
+    protected Task<Void> createTask() {
+        return new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                updateProgress(-1, fileList.size());
+                compress(9);
+                byte[] buffer = new byte[1024];
+
+                try{                        
+                    FileOutputStream fos = new FileOutputStream(outputZipFile);
+                    ZipOutputStream zos = new ZipOutputStream(fos);
+                    zos.setLevel(compressionLevel);
+                        
+                    System.out.println("Output to Zip : " + outputZipFile);
+                    long startTime = 0;
+                    long endTime = 0;
+                    double timeDiffs = 0;
+                    for(int counter = 0; counter < fileList.size(); counter++){
+                        String file = fileList.get(counter);
+                        try{                
+                            updateProgress(counter, fileList.size());
+                            updateMessage("Hi");
+                            clearLine();
+                            timeDiffs += (endTime - startTime)/1000000000;
+                            double eta = estimatedTimeRemaining(timeDiffs, counter, fileList.size());
+                            System.out.printf("\rAdding %d / %d ETA: %.0f seconds | %.2f minutes | %.2f hours rate: %f files/second %s",
+                             counter, fileList.size(), eta, eta/60, eta / 3600, numFilesPerSecond(timeDiffs, counter), file);
+                            startTime = System.nanoTime();
+                           // System.out.println("File Added : " + file);
+                            ZipEntry ze= new ZipEntry(file);
+                            zos.putNextEntry(ze);
+                               
+                            /*
+                            FileInputStream in = 
+                                       new FileInputStream(sourceFolder + File.separator + file);
+                            */
+                            FileInputStream in = 
+                                       new FileInputStream(file);
+                            int len;
+                            while ((len = in.read(buffer)) > 0) {
+                                zos.write(buffer, 0, len);
+                            }
+                               
+                            in.close();      
+                            endTime = System.nanoTime();
+                            try {
+                                Thread.sleep(200);                 //1000 milliseconds is one second.
+                            } catch(InterruptedException ex) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                        catch(FileNotFoundException exc){
+                            exc.printStackTrace();
+                            //System.out.println("\nError reading " + file);
+                        }
+                        catch(IOException exc){
+                            exc.printStackTrace();
+                        }
+
+                    }
+                    /*
+                    for(String file : this.fileList){
+                            
+                        System.out.println("File Added : " + file);
+                        ZipEntry ze= new ZipEntry(file);
+                        zos.putNextEntry(ze);
+                           
+                        FileInputStream in = 
+                                   new FileInputStream(sourceFolder + File.separator + file);
+                       
+                        int len;
+                        while ((len = in.read(buffer)) > 0) {
+                            zos.write(buffer, 0, len);
+                        }
+                           
+                        in.close();
+                    }
+                    */
+                    zos.closeEntry();
+                    //remember close it
+                    zos.close();
+                      
+                    System.out.println("Done");
+                }
+                catch(IOException ex){
+                    ex.printStackTrace();   
+                }
+                updateProgress(0, fileList.size());
+                return null;
+            }
+        };
+    }
+
+	void compress(int newCompressionLevel){
+        if(newCompressionLevel < 0 || newCompressionLevel > 9){
             System.out.println("Compression level must be 0-9");
             return;
         }
-
+        compressionLevel = newCompressionLevel;
         if(fileList.size() == 0){
             generateFileList(new File(sourceFolder));
         }
@@ -69,7 +165,7 @@ public class Compressor
             fileList.removeAll(toRemove);
             fileList.addAll(toAdd);
         }
-    	zipIt(outputZipFile, compressionLevel);
+    	//zipIt(outputZipFile, compressionLevel);
 	}
     private void clearLine(){
         System.out.print("\r");
@@ -94,6 +190,7 @@ public class Compressor
      * Zip it
      * @param zipFile output ZIP file location
      */
+    /*
     public void zipIt(String zipFile, int compressionLevel){
 
      byte[] buffer = new byte[1024];
@@ -111,6 +208,7 @@ public class Compressor
         for(int counter = 0; counter < this.fileList.size(); counter++){
             String file = fileList.get(counter);
             try{                
+                updateProgress(counter, this.fileList.size());
                 clearLine();
                 timeDiffs += (endTime - startTime)/1000000000;
                 double eta = estimatedTimeRemaining(timeDiffs, counter, fileList.size());
@@ -120,11 +218,7 @@ public class Compressor
                // System.out.println("File Added : " + file);
                 ZipEntry ze= new ZipEntry(file);
                 zos.putNextEntry(ze);
-                   
-                /*
-                FileInputStream in = 
-                           new FileInputStream(sourceFolder + File.separator + file);
-                */
+
                 FileInputStream in = 
                            new FileInputStream(file);
                 int len;
@@ -149,24 +243,7 @@ public class Compressor
             }
 
         }
-    	/*
-    	for(String file : this.fileList){
-    			
-    		System.out.println("File Added : " + file);
-    		ZipEntry ze= new ZipEntry(file);
-        	zos.putNextEntry(ze);
-               
-        	FileInputStream in = 
-                       new FileInputStream(sourceFolder + File.separator + file);
-       	   
-        	int len;
-        	while ((len = in.read(buffer)) > 0) {
-        		zos.write(buffer, 0, len);
-        	}
-               
-        	in.close();
-    	}
-    	*/
+
     	zos.closeEntry();
     	//remember close it
     	zos.close();
@@ -177,7 +254,7 @@ public class Compressor
        ex.printStackTrace();   
     }
    }
-    
+    */
     /**
      * Traverse a directory and get all files,
      * and add the file into fileList  

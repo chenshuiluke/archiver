@@ -35,11 +35,17 @@ import javafx.scene.control.ProgressBar;
 import javafx.concurrent.Service;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
+import java.util.HashMap;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.event.EventHandler;
 
 public class ArchiverController{
 	LoadBackupService loadBackup = new LoadBackupService();
 	@FXML
 	private ProgressBar progressBar;
+
+	@FXML
+	private ProgressBar runningBackupProgressBar;
 
 	@FXML
 	private ListView backupList;
@@ -64,6 +70,8 @@ public class ArchiverController{
 
     @FXML
     private Button runBackupButton;
+
+    private HashMap<String, Compressor> backupToRunningBackupThreadMap = new HashMap<>();
 
 	private void setStatusText(String status){
 		Platform.runLater(new Runnable() {
@@ -152,7 +160,9 @@ public class ArchiverController{
 					oldPresetList.remove(item);
 				}
 			}
-
+			if(statusText.getText().equals("Done.")){
+				setProgressBar(false);
+			}
 		}
 	}
 	@FXML // ResourceBundle that was given to the FXMLLoader
@@ -166,12 +176,16 @@ public class ArchiverController{
 		//System.out.println("Hi");
 		setBackupButtonDisable(true);
 		//Can't call ,start() if its state is SUCCEEDED, so make a new one.
-		if(loadBackup.getState().toString().equals("SUCCEEDED")){
+		if(loadBackup.getState().toString().equals("SUCCEEDED") || loadBackup.getState().toString().equals("FAILED")){
 			loadBackup = new LoadBackupService();
+			setProgressBar(false);
 		}
 		if(!loadBackup.getState().toString().equals("RUNNING")){
 			loadBackup.start();	
 			setBackupButtonDisable(false);		
+			runningBackupProgressBar.progressProperty().unbind();
+			runningBackupProgressBar.setProgress(0.0F);
+
 		}
 
 	}
@@ -186,10 +200,37 @@ public class ArchiverController{
 
     @FXML
     void runBackup() {
+ 		String backupName = backupFileName.getText();
+ 		String backupDestination = backupDestinationBox.getText();
+ 		String backupOutputFile = backupDestination + "/" + backupName;
     	ArrayList<String> tempList = new ArrayList<>();
     	tempList.addAll(backupFileList.getItems());
-    	Compressor temp = new Compressor(tempList, backupFileName.getText(), true);
-    	temp.compress(0);
+    	//If no backup job is running for the current backup...
+    	if(backupToRunningBackupThreadMap.get(backupName) == null){
+    		backupToRunningBackupThreadMap.put(backupName, 
+    			new Compressor(tempList, backupOutputFile, true));
+
+    		runningBackupProgressBar.progressProperty().unbind();
+    		runningBackupProgressBar.progressProperty().bind(backupToRunningBackupThreadMap.get(backupName).progressProperty());
+    		backupToRunningBackupThreadMap.get(backupName).start();
+
+
+    		backupToRunningBackupThreadMap.get(backupName).setOnSucceeded(
+    			new EventHandler<WorkerStateEvent>() {
+           			@Override
+		            public void handle(WorkerStateEvent t) {
+		                backupToRunningBackupThreadMap.remove(backupName);
+		            }
+       		});
+    		backupToRunningBackupThreadMap.get(backupName).setOnFailed(
+    			new EventHandler<WorkerStateEvent>() {
+           			@Override
+		            public void handle(WorkerStateEvent t) {
+		                backupToRunningBackupThreadMap.remove(backupName);
+		            }
+       		});
+
+    	}
     }
 
 	private void toggleProgressBar(){
@@ -199,6 +240,26 @@ public class ArchiverController{
 			}
 		});    	
 	}
+
+	private void setProgressBar(boolean value){
+		Platform.runLater(new Runnable() {
+			@Override public void run() {
+				progressBar.setVisible(value);
+			}
+		});    			
+	}
+
+	private void updateProgressBarToThread(){
+		Platform.runLater(new Runnable(){
+			@Override public void run() {
+				runningBackupProgressBar.setProgress(backupToRunningBackupThreadMap.get(backupFileName.getText()).getProgress());
+				runningBackupProgressBar.progressProperty().unbind();
+				runningBackupProgressBar.progressProperty().bind(backupToRunningBackupThreadMap
+					.get(backupFileName.getText()).progressProperty());			
+			}
+		});
+	}
+
 	private class LoadBackupService extends Service<Void> {
  
 		@Override
@@ -206,7 +267,7 @@ public class ArchiverController{
 			return new Task<Void>() {
 				@Override
 				protected Void call() throws Exception {
-					toggleProgressBar();
+					setProgressBar(true);
 					setBackupButtonDisable(true);
 					String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
 					if(selectedItem != null){
@@ -226,8 +287,8 @@ public class ArchiverController{
 								jsonReader.close();
 								
 								System.out.println(jsonFileContent.getString("name"));
-								backupFileName.setText("Name: " + jsonFileContent.getString("name"));
-								backupDestinationBox.setText("Destination: " + jsonFileContent.getString("destination"));
+								backupFileName.setText(jsonFileContent.getString("name"));
+								backupDestinationBox.setText(jsonFileContent.getString("destination"));
 								JsonArray jsonBackupFilesArray = jsonFileContent.getJsonArray("files");
 								
 								setStatusText("Clearing current list.");
@@ -253,13 +314,20 @@ public class ArchiverController{
 							}			
 							catch(IOException  exc){
 								exc.printStackTrace();
+								setProgressBar(false);
 							}
 						}
 						else{
 							backupFileName.setText("");
 						}
 					}
-					toggleProgressBar();
+					if(backupToRunningBackupThreadMap.get(backupFileName.getText()) != null){
+						updateProgressBarToThread();
+					}
+					else{
+						//setStatusText("Not found");
+					}
+					setProgressBar(false);
 					setBackupButtonDisable(false);
 					return null;
 				}
