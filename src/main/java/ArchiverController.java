@@ -44,6 +44,9 @@ public class ArchiverController{
 	@FXML
 	private ProgressBar progressBar;
 
+    @FXML
+    private Button deleteBackupButton;
+
 	@FXML
 	private ProgressBar runningBackupProgressBar;
 
@@ -175,10 +178,27 @@ public class ArchiverController{
     @FXML
     private Text backupProgressText;
 
+    @FXML
+    void deleteSelectedBackup() {
+    	try{
+	 		String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
+			if(selectedItem != null){ 
+				Files.delete(Paths.get("presets/" + selectedItem));
+				backupList.getItems().remove(selectedItem);
+				backupFileList.getItems().clear();
+			}   		
+    	}
+    	catch(IOException e){
+    		e.printStackTrace();
+    	}
+   	
+    }
+
 	@FXML
 	void viewBackupDetails(MouseEvent event) {
 		//System.out.println("Hi");
 		setBackupButtonDisable(true);
+		deleteBackupButton.setDisable(true);
 		//Can't call ,start() if its state is SUCCEEDED, so make a new one.
 		if(loadBackup.getState().toString().equals("SUCCEEDED") || loadBackup.getState().toString().equals("FAILED")){
 			loadBackup = new LoadBackupService();
@@ -323,7 +343,7 @@ public class ArchiverController{
 									@Override public void run() {
 										backupFileList.getItems().clear();	
 										fileNumberBox.setText("No. Files: " + String.valueOf(jsonBackupFilesArray.size()));
-										
+										deleteBackupButton.setDisable(false);
 									}
 								});
 
