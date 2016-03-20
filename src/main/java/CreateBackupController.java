@@ -25,17 +25,18 @@ import javax.json.*;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import javafx.scene.control.ButtonType;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
 public class CreateBackupController {
 
-    @FXML 
+    @FXML
     private TreeTableView<FileToBackup> fileTable;
 	@FXML
 	private TreeTableColumn<FileToBackup, String> filesColumn;
 	@FXML
 	private TreeTableColumn<FileToBackup, String> locationsColumn;
-	
-    @FXML 
+
+    @FXML
 	private TextField backupName;
     @FXML
 	private void addFile(){
@@ -133,24 +134,25 @@ public class CreateBackupController {
 			//http://stackoverflow.com/questions/18983185/how-to-create-correct-jsonarray-in-java-using-jsonobject
 			JsonObjectBuilder output = Json.createObjectBuilder().add("name", backupName.getText());
 			JsonArrayBuilder builder = Json.createArrayBuilder();
-	
+
 			for(String file: list){
 				builder.add(file);
 			}
-			
+
 			output.add("files", builder.build());
 			JsonObject jsonOutput = output.build();
-			
+
 			try{
+        Files.createDirectory(Paths.get("presets"));
 				OutputStream writer = new FileOutputStream("presets/" + backupName.getText() + ".json");
 				JsonWriter jsonWriter = Json.createWriter(writer);
 				jsonWriter.writeObject(jsonOutput);
 				jsonWriter.close();
 			}
-			catch(java.io.FileNotFoundException exc){
+			catch(java.io.IOException exc){
 				exc.printStackTrace();
 			}
-			
+
 		}
 		else{
 			Alert box =  new Alert(AlertType.ERROR, "You must add a file/folder before you can save!");
