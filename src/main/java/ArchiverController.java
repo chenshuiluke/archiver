@@ -74,7 +74,19 @@ public class ArchiverController{
     @FXML
     private Button runBackupButton;
 
+    @FXML
+    private Button cancelRunningBackupButton;
+
+
     private HashMap<String, Compressor> backupToRunningBackupThreadMap = new HashMap<>();
+
+    @FXML
+    void cancelRunningBackup() {
+    	String backupName = backupFileName.getText();
+    	if(backupToRunningBackupThreadMap.get(backupName) != null){
+    		backupToRunningBackupThreadMap.get(backupName).cancel();
+    	}
+    }
 
 	private void setStatusText(String status){
 		Platform.runLater(new Runnable() {
@@ -87,6 +99,9 @@ public class ArchiverController{
 		Platform.runLater(new Runnable() {
 			@Override public void run() {
 				runBackupButton.setDisable(value);
+				if(!loadBackup.getState().toString().equals("RUNNING")){					
+					cancelRunningBackupButton.setDisable(!value);
+				}
 			}
 		});    			
 	}
@@ -225,6 +240,7 @@ public class ArchiverController{
 
     @FXML
     void runBackup() {
+    	setBackupButtonDisable(true);
  		String backupName = backupFileName.getText();
  		String backupDestination = backupDestinationBox.getText();
  		String backupOutputFile = backupDestination + File.separator + backupName;
@@ -242,11 +258,21 @@ public class ArchiverController{
     		setBackupProgressText("");
 			backupProgressText.textProperty().bind(backupToRunningBackupThreadMap.get(backupName).messageProperty());
 
+    		backupToRunningBackupThreadMap.get(backupName).setOnCancelled(
+    			new EventHandler<WorkerStateEvent>() {
+           			@Override
+		            public void handle(WorkerStateEvent t) {
+		                backupToRunningBackupThreadMap.remove(backupName);
+		                setBackupButtonDisable(false);
+		            }
+       		});
+
     		backupToRunningBackupThreadMap.get(backupName).setOnSucceeded(
     			new EventHandler<WorkerStateEvent>() {
            			@Override
 		            public void handle(WorkerStateEvent t) {
 		                backupToRunningBackupThreadMap.remove(backupName);
+		                setBackupButtonDisable(false);
 		            }
        		});
     		backupToRunningBackupThreadMap.get(backupName).setOnFailed(
@@ -254,6 +280,7 @@ public class ArchiverController{
            			@Override
 		            public void handle(WorkerStateEvent t) {
 		                backupToRunningBackupThreadMap.remove(backupName);
+		                setBackupButtonDisable(false);
 		            }
        		});
 
@@ -279,7 +306,14 @@ public class ArchiverController{
 	private void setBackupProgressText(String text){
 		Platform.runLater(new Runnable(){
 			@Override public void run(){
+				backupProgressText.textProperty().unbind();
 				backupProgressText.setText(text);
+				if(backupToRunningBackupThreadMap.get(backupFileName.getText()) != null){
+					backupProgressText.textProperty().bind(backupToRunningBackupThreadMap
+						.get(backupFileName.getText()).messageProperty());						
+				}
+
+
 			}
 		});
 	}
@@ -287,9 +321,9 @@ public class ArchiverController{
 	private void updateProgressTextToThread(){
 		Platform.runLater(new Runnable(){
 			@Override public void run() {
-				backupProgressText.setText(backupToRunningBackupThreadMap.get(backupFileName.getText()).getMessage());
-				
 				backupProgressText.textProperty().unbind();
+				backupProgressText.setText(backupToRunningBackupThreadMap.get(backupFileName.getText()).getMessage());				
+	
 				backupProgressText.textProperty().bind(backupToRunningBackupThreadMap
 					.get(backupFileName.getText()).messageProperty());			
 			}
@@ -371,12 +405,14 @@ public class ArchiverController{
 					if(backupToRunningBackupThreadMap.get(backupFileName.getText()) != null){
 						updateProgressBarToThread();
 						updateProgressTextToThread();
+						setBackupButtonDisable(true);
 					}
 					else{
 						//setStatusText("Not found");
+						setBackupButtonDisable(false);
 					}
 					setProgressBar(false);
-					setBackupButtonDisable(false);
+					
 					return null;
 				}
 			};

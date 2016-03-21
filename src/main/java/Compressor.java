@@ -59,7 +59,7 @@ public class Compressor extends Service<Void>
                     long startTime = 0;
                     long endTime = 0;
                     double timeDiffs = 0;
-                    for(int counter = 0; counter < fileList.size(); counter++){
+                    for(int counter = 0; counter < fileList.size() && !isCancelled(); counter++){
                         String file = fileList.get(counter);
                         try{                
                             updateProgress(counter, fileList.size());

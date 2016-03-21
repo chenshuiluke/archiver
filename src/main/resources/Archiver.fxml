@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
@@ -27,7 +28,7 @@
         </Menu>
       </menus>
     </MenuBar>
-    <SplitPane dividerPositions="0.22271714922049, 0.7594654788418709" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
+    <SplitPane dividerPositions="0.2612312811980033, 0.757071547420965" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
       <items>
         <AnchorPane prefWidth="317.0">
           <children>
@@ -40,7 +41,7 @@
                 <Color blue="0.624" green="0.624" red="0.624" fx:id="x2" />
               </textFill>
             </Label>
-                <Button layoutX="190.0" layoutY="1.0" minWidth="27.0" mnemonicParsing="false" onAction="#showCreateNewBackupWindow" prefHeight="26.0" prefWidth="37.0" text="+" AnchorPane.topAnchor="0.0" />
+                <Button layoutX="190.0" layoutY="1.0" minWidth="27.0" mnemonicParsing="false" onAction="#showCreateNewBackupWindow" prefHeight="26.0" prefWidth="37.0" text="+" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="0.0" />
                   <Button fx:id="deleteBackupButton" disable="true" layoutX="227.0" layoutY="1.0" minWidth="27.0" mnemonicParsing="false" onAction="#deleteSelectedBackup" prefHeight="26.0" prefWidth="37.0" text="-" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
           </children>
         </AnchorPane>
@@ -74,7 +75,12 @@
                   </Text>
                   <Text fx:id="fileNumberBox" strokeType="OUTSIDE" strokeWidth="0.0" text="No. Files: " />
                   <Text fx:id="backupDestinationBox" layoutX="10.0" layoutY="64.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Destination: " wrappingWidth="287.10986328125" />
-                  <Button fx:id="runBackupButton" disable="true" mnemonicParsing="false" onAction="#runBackup" text="Backup" />
+                  <ButtonBar nodeOrientation="RIGHT_TO_LEFT" prefHeight="40.0" prefWidth="200.0">
+                     <buttons>
+                        <Button fx:id="cancelRunningBackupButton" cancelButton="true" disable="true" mnemonicParsing="false" onAction="#cancelRunningBackup" text="Cancel" />
+                        <Button fx:id="runBackupButton" disable="true" mnemonicParsing="false" onAction="#runBackup" text="Backup" />
+                     </buttons>
+                  </ButtonBar>
                   <ProgressBar fx:id="runningBackupProgressBar" prefHeight="20.0" prefWidth="289.0" progress="0.0" />
                   <Text fx:id="backupProgressText" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="288.0" />
                </children>
