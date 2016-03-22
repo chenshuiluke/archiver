@@ -66,6 +66,7 @@ public class Archiver extends Application{
 		    System.out.println( "Exception on FXMLLoader.load()" );
 		    System.out.println( "  * url: " + url );
 		    System.out.println( "  * " + ex );
+		    ex.printStackTrace();
 		    System.out.println( "    ----------------------------------------\n" );
 		}
 	}

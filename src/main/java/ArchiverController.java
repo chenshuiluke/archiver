@@ -4,6 +4,9 @@ import javafx.application.Platform;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Stack;
+import java.util.ArrayDeque;
 import javafx.fxml.FXML;
 import javafx.scene.control.MenuItem;
 import javafx.fxml.FXMLLoader;
@@ -38,6 +41,11 @@ import javafx.scene.control.Button;
 import java.util.HashMap;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TreeView;
+import javafx.scene.control.TreeItem;
+import com.google.common.collect; //http://google-collections.googlecode.com/svn/trunk/javadoc/com/google/common/collect/BiMap.html
+
 
 public class ArchiverController{
 	LoadBackupService loadBackup = new LoadBackupService();
@@ -63,7 +71,7 @@ public class ArchiverController{
 	private Text backupFileName;
 
 	@FXML
-	private ListView<String> backupFileList;
+	private TreeView<String> backupFileList;
 
     @FXML
     private Text fileNumberBox;
@@ -77,7 +85,7 @@ public class ArchiverController{
     @FXML
     private Button cancelRunningBackupButton;
 
-
+    private HashMap<String, TreeItem<String>> fileToTreeItemHashMap = new HashMap<>();
     private HashMap<String, Compressor> backupToRunningBackupThreadMap = new HashMap<>();
 
     @FXML
@@ -200,7 +208,7 @@ public class ArchiverController{
 			if(selectedItem != null){ 
 				Files.delete(Paths.get("presets/" + selectedItem));
 				backupList.getItems().remove(selectedItem);
-				backupFileList.getItems().clear();
+				backupFileList.getRoot().getChildren().clear();
 			}   		
     	}
     	catch(IOException e){
@@ -236,6 +244,8 @@ public class ArchiverController{
 		assert createBackup != null : "fx:id=\"createBackup\" was not injected: check your FXML file 'Archiver.fxml'.";
 		assert backupList != null : "fx:id=\"backupList\" was not injected: check your FXML file 'Archiver.fxml'.";
 		initializeBackupFileList();
+		backupFileList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		backupFileList.setRoot(new TreeItem<String>("Backup Contents"));
 	}
 
     @FXML
@@ -245,7 +255,7 @@ public class ArchiverController{
  		String backupDestination = backupDestinationBox.getText();
  		String backupOutputFile = backupDestination + File.separator + backupName;
     	ArrayList<String> tempList = new ArrayList<>();
-    	tempList.addAll(backupFileList.getItems());
+    	tempList.addAll(getAllChildren(backupFileList.getRoot()));
     	//If no backup job is running for the current backup...
     	if(backupToRunningBackupThreadMap.get(backupName) == null){
     		backupToRunningBackupThreadMap.put(backupName, 
@@ -340,7 +350,44 @@ public class ArchiverController{
 			}
 		});
 	}
+    private ArrayList<String> getAllChildren(TreeItem<String> root){
+		ArrayList<String> list = new ArrayList<>();
+		if(root != null){
+			System.out.println("Current Parent :" + root.getValue());
+			for(TreeItem<String> child: root.getChildren()){
+				if(child != null && child.getChildren() != null && child.getChildren().isEmpty()){
+					list.add(child.getValue());
+			//		System.out.println(child.getValue().getLocation());
+				} else {
+					list.addAll(getAllChildren(child));
+				}
+			}
+		}
+		return list;
+    }
 
+    private void populateTreeViewFromList(String stringFile){
+    	File file = new File(stringFile);
+    	String parentString = file.getParent();
+    	//System.out.println(parentString);
+    	if(fileToTreeItemHashMap.size() == 0){
+    			fileToTreeItemHashMap.put(stringFile, new TreeItem<String>(stringFile));
+    		    fileToTreeItemHashMap.get("root").getChildren().add(fileToTreeItemHashMap.get(stringFile));
+    	}
+    	else{
+    		if(parentString != null){
+    			fileToTreeItemHashMap.put(stringFile, new TreeItem<String>(file.getName()));
+    			if(fileToTreeItemHashMap.get(parentString) != null){
+    				fileToTreeItemHashMap.get(parentString).getChildren().add(fileToTreeItemHashMap.get(stringFile));
+    			}
+    			else{
+    				fileToTreeItemHashMap.get("root").getChildren().add(fileToTreeItemHashMap.get(stringFile));
+    			}
+    			//Reverse search by recursively getting parents or perhaps a two-way hashmap
+    			//http://google-collections.googlecode.com/svn/trunk/javadoc/com/google/common/collect/BiMap.html
+    		}
+    	}
+    }
 	private class LoadBackupService extends Service<Void> {
  
 		@Override
@@ -375,21 +422,23 @@ public class ArchiverController{
 								setStatusText("Clearing current list.");
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
-										backupFileList.getItems().clear();	
+										backupFileList.getRoot().getChildren().clear();	
 										fileNumberBox.setText("No. Files: " + String.valueOf(jsonBackupFilesArray.size()));
 										deleteBackupButton.setDisable(false);
 									}
 								});
 
-								setStatusText("Populating ListView.");
-								for(JsonValue file : jsonBackupFilesArray){
-									String current = file.toString().replaceAll("\"","");
+								setStatusText("Populating TreeView.");
+								fileToTreeItemHashMap.put("root", backupFileList.getRoot());
+								for(JsonValue current : jsonBackupFilesArray){
 									Platform.runLater(new Runnable(){
-										@Override public void run(){
-											backupFileList.getItems().add(current);
+										@Override public void run(){									
+											populateTreeViewFromList(current.toString().replaceAll("\"", ""));
 										}
-									});
+									});									
 								}
+
+							
 								setStatusText("Done.");
 								System.gc();
 							}			
