@@ -252,7 +252,7 @@ public class ArchiverController{
     	try{
 	    	ArrayList<String> fileList = new ArrayList<>();
 			BufferedReader reader = Files.newBufferedReader(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8"));
-			System.out.println(input);
+			//System.out.println(input);
 			String line = null;
 			while ((line = reader.readLine()) != null){
 				if(!line.equals(input))
