@@ -229,7 +229,9 @@ public class ArchiverController{
 	      		//System.out.println(item.getValue());
 	    		TreeItem<String> parent = item.getParent();
 	    		String fileToRemove = fileToTreeItemHashMap.inverse().get(item);
-
+	    		if(fileToRemove == null){
+	    			continue;
+	    		}
 	    		listToBeRemovedFromPreset.add(fileToRemove);
 	    		listToBeRemovedFromPreset.addAll(addFilesRecursively(new File(fileToRemove)));
 	    		Platform.runLater(new Runnable(){
