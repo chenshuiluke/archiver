@@ -29,12 +29,12 @@
         </Menu>
       </menus>
     </MenuBar>
-    <SplitPane dividerPositions="0.2612312811980033, 0.757071547420965" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
+    <SplitPane dividerPositions="0.25374376039933444, 0.8069883527454242" focusTraversable="true" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS">
       <items>
         <AnchorPane prefWidth="317.0">
           <children>
-                  <ListView fx:id="backupList" layoutX="-24.0" layoutY="41.0" onMouseClicked="#viewBackupDetails" prefHeight="501.0" prefWidth="221.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="41.0" />
-            <Label alignment="CENTER" layoutY="4.0" minWidth="60.0" prefHeight="21.0" prefWidth="172.0" style="&#10;" text="Existing Backups" textAlignment="CENTER" wrapText="false" AnchorPane.topAnchor="0.0">
+                  <ListView fx:id="backupList" layoutX="-24.0" layoutY="41.0" onMouseClicked="#viewBackupDetails" prefHeight="501.0" prefWidth="221.0" AnchorPane.bottomAnchor="41.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="41.0" />
+            <Label alignment="CENTER" layoutY="4.0" minWidth="60.0" prefHeight="21.0" prefWidth="172.0" style="&#10;" text="Existing Backups" textAlignment="CENTER" wrapText="false" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
               <font>
                 <Font size="18.0" fx:id="x1" />
               </font>
@@ -56,10 +56,18 @@
                         <Color blue="0.624" green="0.624" red="0.624" fx:id="x21" />
                      </textFill>
                   </Label>
-                  <TreeView fx:id="backupFileList" layoutY="41.0" prefHeight="501.0" prefWidth="588.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="41.0" />
+                  <TreeView fx:id="backupFileList" layoutX="27.0" layoutY="57.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="41.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="41.0" />
+                  <ButtonBar fx:id="backupModificationBar" buttonMinWidth="0.0" prefHeight="40.0" prefWidth="422.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                    <buttons>
+                        <Button layoutX="212.0" layoutY="17.0" mnemonicParsing="false" onAction="#selectDestination" prefHeight="28.0" prefWidth="168.0" text="Select Destination" />
+                      <Button mnemonicParsing="false" onAction="#removeItem" prefWidth="40.0" text="Remove" />
+                        <Button layoutX="121.0" layoutY="17.0" maxWidth="100.0" mnemonicParsing="false" onAction="#addFile" text="Add File" />
+                        <Button layoutX="244.0" layoutY="17.0" maxWidth="120.0" mnemonicParsing="false" onAction="#addFolder" text="Add Folder" />
+                    </buttons>
+                  </ButtonBar>
                </children>
             </AnchorPane>
-            <VBox prefHeight="200.0" prefWidth="181.0">
+            <VBox minWidth="0.0" prefHeight="200.0" prefWidth="181.0">
                <children>
                   <Label alignment="CENTER" minWidth="60.0" prefHeight="21.0" prefWidth="172.0" style="&#10;" text="Details" textAlignment="CENTER" wrapText="false">
                      <font>
@@ -82,8 +90,8 @@
                         <Button fx:id="runBackupButton" disable="true" mnemonicParsing="false" onAction="#runBackup" text="Backup" />
                      </buttons>
                   </ButtonBar>
-                  <ProgressBar fx:id="runningBackupProgressBar" prefHeight="20.0" prefWidth="289.0" progress="0.0" />
-                  <Text fx:id="backupProgressText" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="288.0" />
+                  <ProgressBar fx:id="runningBackupProgressBar" prefHeight="16.0" prefWidth="182.0" progress="0.0" />
+                  <Text fx:id="backupProgressText" strokeType="OUTSIDE" strokeWidth="0.0" wrappingWidth="180.0" />
                </children>
             </VBox>
       </items>

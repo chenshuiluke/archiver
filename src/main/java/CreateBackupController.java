@@ -29,7 +29,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.control.Button;
-
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.nio.charset.Charset;
+import java.nio.file.StandardOpenOption;
 
 public class CreateBackupController {
 
@@ -155,28 +158,23 @@ public class CreateBackupController {
 			System.out.printf("Backup text: %s|\n", backupName.getText());
 			//ArrayList<String> list = getAllChildren(fileTable.getRoot());
 			//http://stackoverflow.com/questions/18983185/how-to-create-correct-jsonarray-in-java-using-jsonobject
-			JsonObjectBuilder output = Json.createObjectBuilder().add("name", backupName.getText());
-			output.add("destination", backupDestination);
-			JsonArrayBuilder builder = Json.createArrayBuilder();
-
-			for(String file: list){
-				builder.add(file);
-			}
-
-			output.add("files", builder.build());
-			JsonObject jsonOutput = output.build();
-
 			try{
-		        File presetFolder = new File("presets");
-		        
+				File presetFolder = new File("presets");
 		        if(!presetFolder.isDirectory()){
 		          Files.createDirectory(Paths.get("presets"));
 		        }
-
-				OutputStream writer = new FileOutputStream("presets/" + backupName.getText() + ".json");
-				JsonWriter jsonWriter = Json.createWriter(writer);
-				jsonWriter.writeObject(jsonOutput);
-				jsonWriter.close();
+				BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupName.getText() + ".txt"), 
+					Charset.forName("UTF-8"), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+		        
+		        writer.write(backupName.getText());
+		        writer.newLine();
+		        writer.write(backupDestination);
+		        writer.newLine();
+		        for(String file : list){
+		        	writer.write(file);
+		        	writer.newLine();
+		        }
+		        writer.close();
 			}
 			catch(java.io.IOException exc){
 				exc.printStackTrace();

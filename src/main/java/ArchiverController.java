@@ -15,6 +15,9 @@ import javafx.scene.Scene;
 import javafx.scene.Parent;
 
 import java.io.File;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -44,8 +47,12 @@ import javafx.event.EventHandler;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TreeItem;
+import java.nio.charset.Charset;
 import com.google.common.collect.HashBiMap; //http://google-collections.googlecode.com/svn/trunk/javadoc/com/google/common/collect/HashBiMap.html
-
+import javafx.scene.control.ButtonBar;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import java.nio.file.StandardOpenOption;
 
 public class ArchiverController{
 	LoadBackupService loadBackup = new LoadBackupService();
@@ -84,6 +91,9 @@ public class ArchiverController{
 
     @FXML
     private Button cancelRunningBackupButton;
+
+    @FXML
+    private ButtonBar backupModificationBar;
 
     private HashBiMap<String, TreeItem<String>> fileToTreeItemHashMap = HashBiMap.create(); //http://stackoverflow.com/questions/2574685/java-how-to-use-googles-hashbimap
     private HashMap<String, Compressor> backupToRunningBackupThreadMap = new HashMap<>();
@@ -159,6 +169,146 @@ public class ArchiverController{
 		}
 
 	}
+	private ArrayList<String> addFilesRecursively(File file){
+		ArrayList<String>list = new ArrayList<>();
+		//add file only
+		if(file.isFile()){
+			list.add(file.getAbsolutePath());
+		}
+		else if(file.isDirectory()){
+				String[] subNote = file.list();
+				list.add(file.getAbsolutePath());
+				if(subNote != null){
+					for(String filename : subNote){
+						File temp = new File(file, filename);
+						
+						list.addAll(addFilesRecursively(temp));
+					}
+				}
+		}
+		return list;
+	}
+    @FXML
+    void selectDestination() {
+    	DirectoryChooser chooser = new DirectoryChooser();
+    	chooser.setTitle("Choose directory");
+    	File file = chooser.showDialog(null);
+    	if(file != null){
+	    	try{
+		    	ArrayList<String> fileList = new ArrayList<>();
+				BufferedReader reader = Files.newBufferedReader(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8"));
+
+				String line = null;
+				while ((line = reader.readLine()) != null){
+						fileList.add(line);
+				}
+				reader.close();
+				fileList.set(1, file.getAbsolutePath());
+				BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8")
+						, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+				for(String item : fileList){
+					writer.write(item);
+					writer.newLine();
+				}
+				writer.close();
+	    	}
+	    	catch(IOException exc){
+	    		exc.printStackTrace();
+	    	}
+	    	viewBackupDetails();
+	    }
+    }
+
+    @FXML
+    void removeItem() {
+    	ObservableList<TreeItem<String>> selected = backupFileList.getSelectionModel().getSelectedItems();
+    	ArrayList<String> listToBeRemovedFromPreset = new ArrayList<>();
+    	if(selected != null){
+	      	for(TreeItem<String> item : selected){
+
+	      		//System.out.println(item.getValue());
+	    		TreeItem<String> parent = item.getParent();
+	    		String fileToRemove = fileToTreeItemHashMap.inverse().get(item);
+
+	    		listToBeRemovedFromPreset.add(fileToRemove);
+	    		listToBeRemovedFromPreset.addAll(addFilesRecursively(new File(fileToRemove)));
+	    		Platform.runLater(new Runnable(){
+					@Override public void run(){
+			    		if(parent != null){
+			    			parent.getChildren().remove(item);	
+			    		}	   
+			    	}
+			    });
+	    	}  		
+	    	for(String item : listToBeRemovedFromPreset){
+	    		removeFromPreset(item);
+	    	}
+	    	//viewBackupDetails();
+    	}
+    	
+
+    }
+    void removeFromPreset(String input){
+    	try{
+	    	ArrayList<String> fileList = new ArrayList<>();
+			BufferedReader reader = Files.newBufferedReader(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8"));
+			System.out.println(input);
+			String line = null;
+			while ((line = reader.readLine()) != null){
+				if(!line.equals(input))
+					fileList.add(line);
+			}
+			reader.close();
+			BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8")
+					, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+			for(String item : fileList){
+				writer.write(item);
+				writer.newLine();
+			}
+			writer.close();
+    	}
+    	catch(IOException exc){
+    		exc.printStackTrace();
+    	}
+
+    }
+    @FXML
+    void addFile() {
+    	DirectoryChooser chooser = new DirectoryChooser();
+    	chooser.setTitle("Choose directory");
+    	File file = chooser.showDialog(null);
+    	if(file != null){
+    		addToPreset(file.getAbsolutePath());
+    	}
+    	viewBackupDetails();
+    }
+
+    @FXML
+    void addFolder() {
+    	DirectoryChooser chooser = new DirectoryChooser();
+    	chooser.setTitle("Choose directory");
+    	File directory = chooser.showDialog(null);
+    	if(directory != null){
+    		ArrayList<String> subFiles = addFilesRecursively(directory);
+    		for(String file : subFiles){
+    			addToPreset(file);
+    		}
+    	}
+    	viewBackupDetails();
+    }
+	void addToPreset(String input){
+		try{
+			BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupFileName.getText() + ".txt"), 
+						Charset.forName("UTF-8"), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
+			writer.write(input);
+			writer.newLine();
+			writer.close();	
+			//viewBackupDetails();
+		}
+		catch(IOException exc){
+			exc.printStackTrace();
+		}
+	}
 	private void initializeBackupFileList(){
 
 		File presets = new File("presets");
@@ -170,7 +320,7 @@ public class ArchiverController{
 
 			//Get contents of presets folder
 			for(String file : list){
-				if(getExtension(file).equals("json")){
+				if(getExtension(file).equals("txt")){
 					newPresetList.add(file);
 				}
 			}
@@ -218,7 +368,7 @@ public class ArchiverController{
     }
 
 	@FXML
-	void viewBackupDetails(MouseEvent event) {
+	void viewBackupDetails() {
 		//System.out.println("Hi");
 		setBackupButtonDisable(true);
 		deleteBackupButton.setDisable(true);
@@ -246,6 +396,7 @@ public class ArchiverController{
 		initializeBackupFileList();
 		backupFileList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		backupFileList.setRoot(new TreeItem<String>("Backup Contents"));
+		backupFileList.getRoot().setExpanded(true);
 	}
 
     @FXML
@@ -356,7 +507,7 @@ public class ArchiverController{
 			System.out.println("Current Parent :" + root.getValue());
 			for(TreeItem<String> child: root.getChildren()){
 				if(child != null && child.getChildren() != null && child.getChildren().isEmpty()){
-					list.add(child.getValue());
+					list.add(fileToTreeItemHashMap.inverse().get(child));
 			//		System.out.println(child.getValue().getLocation());
 				} else {
 					list.addAll(getAllChildren(child));
@@ -395,6 +546,7 @@ public class ArchiverController{
 			return new Task<Void>() {
 				@Override
 				protected Void call() throws Exception {
+					fileToTreeItemHashMap.clear();
 					setProgressBar(true);
 					setBackupButtonDisable(true);
 					String selectedItem = (String)backupList.getSelectionModel().getSelectedItem();
@@ -405,40 +557,39 @@ public class ArchiverController{
 							System.out.println(backupFile.getAbsoluteFile().toString());  
 							//http://www.journaldev.com/2315/java-json-processing-api-example-tutorial
 							try{
-								setStatusText("Reading json file.");
 
-								FileInputStream jsonInputStream = new FileInputStream(backupFile);
-								JsonReader jsonReader = Json.createReader(jsonInputStream);      				
-								JsonObject jsonFileContent = jsonReader.readObject();
+								ArrayList<String> fileList = new ArrayList<>();
 
-								jsonInputStream.close();
-								jsonReader.close();
-								
-								System.out.println(jsonFileContent.getString("name"));
-								backupFileName.setText(jsonFileContent.getString("name"));
-								backupDestinationBox.setText(jsonFileContent.getString("destination"));
-								JsonArray jsonBackupFilesArray = jsonFileContent.getJsonArray("files");
-								
+								setStatusText("Reading file.");
+								BufferedReader reader = Files.newBufferedReader(Paths.get(backupFile.getPath()), Charset.forName("UTF-8"));
+								backupFileName.setText(reader.readLine());
+								backupDestinationBox.setText(reader.readLine());
+
+								String line = null;
+								while ((line = reader.readLine()) != null)
+									fileList.add(line);
+								reader.close();
+							
 								setStatusText("Clearing current list.");
 								Platform.runLater(new Runnable() {
 									@Override public void run() {
 										backupFileList.getRoot().getChildren().clear();	
-										fileNumberBox.setText("No. Files: " + String.valueOf(jsonBackupFilesArray.size()));
+										fileNumberBox.setText("No. Files: " + String.valueOf(fileList.size()));
 										deleteBackupButton.setDisable(false);
 									}
 								});
 
 								setStatusText("Populating TreeView.");
 								fileToTreeItemHashMap.put("root", backupFileList.getRoot());
-								for(JsonValue current : jsonBackupFilesArray){
+								for(String current : fileList){
 									Platform.runLater(new Runnable(){
 										@Override public void run(){									
-											populateTreeViewFromList(current.toString().replaceAll("\"", ""));
+											populateTreeViewFromList(current.replaceAll("\"", ""));
 										}
 									});									
 								}
 
-							
+								
 								setStatusText("Done.");
 								System.gc();
 							}			
