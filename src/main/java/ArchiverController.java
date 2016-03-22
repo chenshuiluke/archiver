@@ -117,9 +117,8 @@ public class ArchiverController{
 		Platform.runLater(new Runnable() {
 			@Override public void run() {
 				runBackupButton.setDisable(value);
-				if(!loadBackup.getState().toString().equals("RUNNING")){					
-					cancelRunningBackupButton.setDisable(!value);
-				}
+				cancelRunningBackupButton.setDisable(!value);
+				
 			}
 		});    			
 	}
@@ -372,7 +371,6 @@ public class ArchiverController{
 	@FXML
 	void viewBackupDetails() {
 		//System.out.println("Hi");
-		setBackupButtonDisable(true);
 		deleteBackupButton.setDisable(true);
 		//Can't call ,start() if its state is SUCCEEDED, so make a new one.
 		if(loadBackup.getState().toString().equals("SUCCEEDED") || loadBackup.getState().toString().equals("FAILED")){
@@ -386,6 +384,9 @@ public class ArchiverController{
 			runningBackupProgressBar.setProgress(0.0F);
 			backupProgressText.textProperty().unbind();
 			setBackupProgressText("");
+		}
+		else{
+			setBackupButtonDisable(true);	
 		}
 
 	}
