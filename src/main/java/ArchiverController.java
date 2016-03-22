@@ -44,7 +44,7 @@ import javafx.event.EventHandler;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.TreeItem;
-import com.google.common.collect; //http://google-collections.googlecode.com/svn/trunk/javadoc/com/google/common/collect/BiMap.html
+import com.google.common.collect.HashBiMap; //http://google-collections.googlecode.com/svn/trunk/javadoc/com/google/common/collect/HashBiMap.html
 
 
 public class ArchiverController{
@@ -85,7 +85,7 @@ public class ArchiverController{
     @FXML
     private Button cancelRunningBackupButton;
 
-    private HashMap<String, TreeItem<String>> fileToTreeItemHashMap = new HashMap<>();
+    private HashBiMap<String, TreeItem<String>> fileToTreeItemHashMap = HashBiMap.create(); //http://stackoverflow.com/questions/2574685/java-how-to-use-googles-hashbimap
     private HashMap<String, Compressor> backupToRunningBackupThreadMap = new HashMap<>();
 
     @FXML
