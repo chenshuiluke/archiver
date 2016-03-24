@@ -70,13 +70,4 @@ public class Archiver extends Application{
 		    System.out.println( "    ----------------------------------------\n" );
 		}
 	}
-	public static void commandLine(){
-		try(Scanner inputScanner = new Scanner(System.in)){
-			System.out.println("Please enter the name of a directory to compress:");
-			String input = inputScanner.nextLine();
-			Compressor compressor = new Compressor(input, "output", true);
-			compressor.compress(0);
-		}
-
-	}
 }

@@ -142,7 +142,7 @@ public class ArchiverController{
 				});
 							
 				try{
-					Thread.sleep(10000);
+					Thread.sleep(1000);
 					
 				}
 				
@@ -222,6 +222,7 @@ public class ArchiverController{
     void removeItem() {
     	ObservableList<TreeItem<String>> selected = backupFileList.getSelectionModel().getSelectedItems();
     	ArrayList<String> listToBeRemovedFromPreset = new ArrayList<>();
+    	System.out.println(selected);
     	if(selected != null){
 	      	for(TreeItem<String> item : selected){
 
@@ -244,7 +245,7 @@ public class ArchiverController{
 	    	for(String item : listToBeRemovedFromPreset){
 	    		removeFromPreset(item);
 	    	}
-	    	//viewBackupDetails();
+	    	viewBackupDetails();
     	}
     	
 
@@ -382,10 +383,11 @@ public class ArchiverController{
 			setBackupButtonDisable(false);		
 			runningBackupProgressBar.progressProperty().unbind();
 			runningBackupProgressBar.setProgress(0.0F);
-			backupProgressText.textProperty().unbind();
-			setBackupProgressText("");
+
 		}
 		else{
+			backupProgressText.textProperty().unbind();
+			setBackupProgressText("");
 			setBackupButtonDisable(true);	
 		}
 
@@ -472,11 +474,12 @@ public class ArchiverController{
 			@Override public void run(){
 				backupProgressText.textProperty().unbind();
 				backupProgressText.setText(text);
+				
 				if(backupToRunningBackupThreadMap.get(backupFileName.getText()) != null){
 					backupProgressText.textProperty().bind(backupToRunningBackupThreadMap
 						.get(backupFileName.getText()).messageProperty());						
 				}
-
+				
 
 			}
 		});
@@ -613,6 +616,8 @@ public class ArchiverController{
 					else{
 						//setStatusText("Not found");
 						setBackupButtonDisable(false);
+						backupProgressText.textProperty().unbind();
+						setBackupProgressText("");
 					}
 					setProgressBar(false);
 					

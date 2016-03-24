@@ -13,10 +13,17 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javafx.concurrent.Task;
 import javafx.concurrent.Service;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.progress.ProgressMonitor;
+import net.lingala.zip4j.util.Zip4jConstants;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Compressor extends Service<Void>
 {
-    ArrayList<String> fileList;
+    HashSet<String> fileList = new HashSet<>();
     private static String outputZipFile;
     private static String sourceFolder = null;
 	private static int compressionLevel = 0;
@@ -34,11 +41,11 @@ public class Compressor extends Service<Void>
             this.outputZipFile = outputZipFile;       
     }
     Compressor(String sourceFolder, String outputZipFile, boolean setZipExtension){
-		fileList = new ArrayList<String>();
+		fileList = new HashSet<String>();
         initVariables(outputZipFile, setZipExtension);
     }
     Compressor(ArrayList<String> newFileList, String outputZipFile, boolean setZipExtension){
-        fileList = newFileList;
+        fileList.addAll(newFileList);
         initVariables(outputZipFile, setZipExtension);
     }
     @Override
@@ -47,258 +54,45 @@ public class Compressor extends Service<Void>
             @Override
             protected Void call() throws Exception {
                 updateProgress(-1, fileList.size());
-                compress(9);
-                byte[] buffer = new byte[1024];
-
-                try{                        
-                    FileOutputStream fos = new FileOutputStream(outputZipFile);
-                    ZipOutputStream zos = new ZipOutputStream(fos);
-                    zos.setLevel(compressionLevel);
-                        
-                    System.out.println("Output to Zip : " + outputZipFile);
-                    long startTime = 0;
-                    long endTime = 0;
-                    double timeDiffs = 0;
-                    for(int counter = 0; counter < fileList.size() && !isCancelled(); counter++){
-                        String file = fileList.get(counter);
-                        try{                
-                            updateProgress(counter, fileList.size());
-                            updateMessage(String.valueOf(counter) + "/" + String.valueOf(fileList.size())
-                             + System.getProperty("line.separator") + file);
-                            clearLine();
-                            timeDiffs += (endTime - startTime)/1000000000;
-                            double eta = estimatedTimeRemaining(timeDiffs, counter, fileList.size());
-                            System.out.printf("\rAdding %d / %d ETA: %.0f seconds | %.2f minutes | %.2f hours rate: %f files/second %s",
-                             counter, fileList.size(), eta, eta/60, eta / 3600, numFilesPerSecond(timeDiffs, counter), file);
-                            startTime = System.nanoTime();
-                           // System.out.println("File Added : " + file);
-                            ZipEntry ze= new ZipEntry(file);
-                            zos.putNextEntry(ze);
-                               
-                            /*
-                            FileInputStream in = 
-                                       new FileInputStream(sourceFolder + File.separator + file);
-                            */
-                            FileInputStream in = 
-                                       new FileInputStream(file);
-                            int len;
-                            while ((len = in.read(buffer)) > 0) {
-                                zos.write(buffer, 0, len);
-                            }
-                               
-                            in.close();      
-                            endTime = System.nanoTime();
-                            try {
-                                Thread.sleep(200);                 //1000 milliseconds is one second.
-                            } catch(InterruptedException ex) {
-                                Thread.currentThread().interrupt();
-                            }
-                        }
-                        catch(FileNotFoundException exc){
-                            exc.printStackTrace();
-                            //System.out.println("\nError reading " + file);
-                        }
-                        catch(IOException exc){
-                            exc.printStackTrace();
-                        }
-
+                //fileList.addAll(generateFileList(new File(sourceFolder)));
+                try{
+                    Files.deleteIfExists(Paths.get(outputZipFile));
+                    ZipFile zipFile = new ZipFile(outputZipFile);
+                    HashSet<String> copy = (HashSet<String>)fileList.clone();
+                    for(String file : copy){
+                        generateFileList(new File(file));
                     }
-                    /*
-                    for(String file : this.fileList){
-                            
-                        System.out.println("File Added : " + file);
-                        ZipEntry ze= new ZipEntry(file);
-                        zos.putNextEntry(ze);
-                           
-                        FileInputStream in = 
-                                   new FileInputStream(sourceFolder + File.separator + file);
-                       
-                        int len;
-                        while ((len = in.read(buffer)) > 0) {
-                            zos.write(buffer, 0, len);
-                        }
-                           
-                        in.close();
-                    }
-                    */
-                    zos.closeEntry();
-                    //remember close it
-                    zos.close();
-                      
-                    System.out.println("Done");
+                    ZipParameters parameters = new ZipParameters();
+                    parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+                    parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_ULTRA);                 
+                    int counter = 0;
+                    for(String file : fileList){
+                        updateMessage(String.valueOf(counter) + "/" + fileList.size() + System.getProperty("line.separator") + "Adding " + file);
+                        updateProgress(counter, fileList.size());
+                        zipFile.addFile(new File(file), parameters);
+                        counter++;
+                    }      
+                    updateMessage("Done!");
                 }
-                catch(IOException ex){
-                    ex.printStackTrace();   
+                catch(ZipException exc){
+                    exc.printStackTrace();
                 }
-                updateProgress(0, fileList.size());
-                updateMessage("Done!");
                 return null;
             }
         };
     }
 
-	void compress(int newCompressionLevel){
-        if(newCompressionLevel < 0 || newCompressionLevel > 9){
-            System.out.println("Compression level must be 0-9");
-            return;
-        }
-        compressionLevel = newCompressionLevel;
-        if(fileList.size() == 0){
-            generateFileList(new File(sourceFolder));
-        }
-    	else{
-            Set<String> listWithoutDuplicates = new HashSet<>();
-            listWithoutDuplicates.addAll(fileList);
-            fileList.clear();
-            fileList.addAll(listWithoutDuplicates);
-            ArrayList<String> toRemove = new ArrayList<>();
-            ArrayList<String> toAdd = new ArrayList<>();
-            for(String file : fileList){
-                File temp = new File(file);
-                if(temp.canRead()){
-                    if(temp.isDirectory()){
-                        toAdd.addAll(generateFileList(temp, 0));
-                    }
-                }
-                else{
-                    System.out.println("Cannot read " + file);
-                }
-            }
-            fileList.removeAll(toRemove);
-            fileList.addAll(toAdd);
-        }
-    	//zipIt(outputZipFile, compressionLevel);
-	}
-    private void clearLine(){
-        System.out.print("\r");
-        for(int counter = 0; counter < 110; counter++){
-            System.out.print(" ");
-        }
-        System.out.print("\r");
-    }
-    public ArrayList<String> getList(){
-        return fileList;
-    }
-    public void setList(ArrayList<String> list){
-        fileList = list;
-    }
-    private double estimatedTimeRemaining(double totalTime,int numDone, int numRemaining){
-        return (totalTime / numDone) * numRemaining;
-    }
-    private double numFilesPerSecond(double totalTime, int numDone){
-        return numDone > 0 ? totalTime/numDone : 0;
-    }
-    /**
-     * Zip it
-     * @param zipFile output ZIP file location
-     */
-    /*
-    public void zipIt(String zipFile, int compressionLevel){
-
-     byte[] buffer = new byte[1024];
-    	
-     try{
-    		
-    	FileOutputStream fos = new FileOutputStream(zipFile);
-    	ZipOutputStream zos = new ZipOutputStream(fos);
-		zos.setLevel(compressionLevel);
-    		
-    	System.out.println("Output to Zip : " + zipFile);
-        long startTime = 0;
-        long endTime = 0;
-        double timeDiffs = 0;
-        for(int counter = 0; counter < this.fileList.size(); counter++){
-            String file = fileList.get(counter);
-            try{                
-                updateProgress(counter, this.fileList.size());
-                clearLine();
-                timeDiffs += (endTime - startTime)/1000000000;
-                double eta = estimatedTimeRemaining(timeDiffs, counter, fileList.size());
-                System.out.printf("\rAdding %d / %d ETA: %.0f seconds | %.2f minutes | %.2f hours rate: %f files/second %s",
-                 counter, fileList.size(), eta, eta/60, eta / 3600, numFilesPerSecond(timeDiffs, counter), file);
-                startTime = System.nanoTime();
-               // System.out.println("File Added : " + file);
-                ZipEntry ze= new ZipEntry(file);
-                zos.putNextEntry(ze);
-
-                FileInputStream in = 
-                           new FileInputStream(file);
-                int len;
-                while ((len = in.read(buffer)) > 0) {
-                    zos.write(buffer, 0, len);
-                }
-                   
-                in.close();      
-                endTime = System.nanoTime();
-                try {
-                    Thread.sleep(200);                 //1000 milliseconds is one second.
-                } catch(InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-            catch(FileNotFoundException exc){
-                exc.printStackTrace();
-                //System.out.println("\nError reading " + file);
-            }
-            catch(IOException exc){
-                exc.printStackTrace();
-            }
-
-        }
-
-    	zos.closeEntry();
-    	//remember close it
-    	zos.close();
-          
-    	System.out.println("Done");
-    }
-    catch(IOException ex){
-       ex.printStackTrace();   
-    }
-   }
-    */
-    /**
-     * Traverse a directory and get all files,
-     * and add the file into fileList  
-     * @param node file or directory
-     */
     public void generateFileList(File node){
-        	//add file only
-    	if(node.isFile()){
-    		fileList.add(generateZipEntry(node.getPath()));
-    	}
-    		
-    	if(node.isDirectory()){
-    		String[] subNote = node.list();
-    		for(String filename : subNote){
-    			generateFileList(new File(node, filename));
-    		}
-    	}     
-    }
-
-    public ArrayList<String> generateFileList(File node, int useless){
-        ArrayList<String> list = new ArrayList<>();
             //add file only
         if(node.isFile()){
-            list.add(generateZipEntry(node.getPath()));
+            fileList.add(node.getAbsolutePath());
         }
-        else if(node.isDirectory()){
+            
+        if(node.isDirectory()){
             String[] subNote = node.list();
-
-            if(subNote != null){
-                for(String filename : subNote){
-                    list.addAll(generateFileList(new File(node, filename), 0));
-                }
+            for(String filename : subNote){
+                generateFileList(new File(node, filename));
             }
-        }
-        return list;
-    }
-    /**
-     * Format the file path for zip
-     * @param file file path
-     * @return Formatted file path
-     */
-    private String generateZipEntry(String file){
-    	return file;
+        }     
     }
 }
