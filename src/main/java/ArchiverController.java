@@ -164,7 +164,7 @@ public class ArchiverController{
 			stage.show();
 		}
 		catch(Exception e){
-			System.out.println(e.getMessage());
+			e.printStackTrace();
 		}
 
 	}

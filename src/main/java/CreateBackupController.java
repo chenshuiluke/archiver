@@ -33,6 +33,8 @@ import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.nio.charset.Charset;
 import java.nio.file.StandardOpenOption;
+import javafx.scene.control.ComboBox;
+import javafx.collections.ObservableList;
 
 public class CreateBackupController {
 
@@ -47,6 +49,12 @@ public class CreateBackupController {
 
     @FXML
     private Button destinationButton;
+
+    @FXML
+    private ComboBox<String> intervalList;
+
+    @FXML
+    private TextField intervalTime;
 
     @FXML
     void setDestination() {
@@ -134,12 +142,16 @@ public class CreateBackupController {
 					p.getValue().getValue().getName()));
 		locationsColumn.setCellValueFactory((CellDataFeatures<FileToBackup, String> p) -> new ReadOnlyStringWrapper(
 					p.getValue().getValue().getLocation()));
+
 /*
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> {
 					fileTable.scrollTo(0);
 		            System.out.println("Handler caught exception: "+throwable.getMessage());
 					        });
 */
+		intervalList.getItems().addAll("minutes", "seconds", "hours");
+		intervalList.getSelectionModel().select(0);
+
     }
 	@FXML
 	private void save() throws java.io.FileNotFoundException{
@@ -199,6 +211,7 @@ public class CreateBackupController {
 					list.addAll(getAllChildren(child));
 				}
 			}
+			
 		}
 		return list;
     }
