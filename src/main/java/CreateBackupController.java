@@ -149,8 +149,8 @@ public class CreateBackupController {
 		            System.out.println("Handler caught exception: "+throwable.getMessage());
 					        });
 */
-		intervalList.getItems().addAll("minutes", "seconds", "hours");
-		intervalList.getSelectionModel().select(0);
+		intervalList.getItems().addAll("seconds", "minutes", "hours");
+		intervalList.getSelectionModel().select(1);
 
     }
 	@FXML
@@ -164,6 +164,14 @@ public class CreateBackupController {
 		else if(backupDestination.equals("")){
 			Alert box = new Alert(AlertType.ERROR, "Choose a backup destination.");
 			box.showAndWait();
+		}
+		else if(intervalTime.getText().length() == 0 ){
+			Alert box = new Alert(AlertType.ERROR, "The interval must not be empty.");
+			box.showAndWait();	
+		}
+		else if(!intervalTime.getText().matches(".*\\d+.*")){
+			Alert box = new Alert(AlertType.ERROR, "The interval must be numeric.");
+			box.showAndWait();			
 		}
 		else if(numberOfDirectRootChildren > 0){
 			ArrayList<String> list = getAllChildren(fileTable.getRoot());
@@ -181,6 +189,21 @@ public class CreateBackupController {
 		        writer.write(backupName.getText());
 		        writer.newLine();
 		        writer.write(backupDestination);
+		        writer.newLine();
+		        int secondsIntVal = 0;
+		        String interval = intervalList.getSelectionModel().getSelectedItem();
+		        switch(interval){
+		        	case "minutes":
+		        		secondsIntVal = Integer.valueOf(intervalTime.getText()) * 60;
+		        	break;
+		        	case "hours":
+		        		secondsIntVal = Integer.valueOf(intervalTime.getText()) * 60 * 60;
+		        	break;
+		        	case "seconds":
+		        		secondsIntVal = Integer.valueOf(intervalTime.getText());
+		        	break;
+		        }
+		        writer.write(String.valueOf(secondsIntVal));
 		        writer.newLine();
 		        for(String file : list){
 		        	writer.write(file);

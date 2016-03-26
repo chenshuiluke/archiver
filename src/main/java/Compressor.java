@@ -72,6 +72,7 @@ public class Compressor extends Service<Void>
                         zipFile.addFile(new File(file), parameters);
                         counter++;
                     }      
+                    updateProgress(1,1);
                     updateMessage("Done!");
                 }
                 catch(ZipException exc){

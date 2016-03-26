@@ -98,9 +98,11 @@ public class ArchiverController{
     private HashBiMap<String, TreeItem<String>> fileToTreeItemHashMap = HashBiMap.create(); //http://stackoverflow.com/questions/2574685/java-how-to-use-googles-hashbimap
     private HashMap<String, Compressor> backupToRunningBackupThreadMap = new HashMap<>();
 
+
+    private Backup backupDetails = new Backup();
     @FXML
     void cancelRunningBackup() {
-    	String backupName = backupFileName.getText();
+    	String backupName = backupDetails.getName();
     	if(backupToRunningBackupThreadMap.get(backupName) != null){
     		backupToRunningBackupThreadMap.get(backupName).cancel();
     	}
@@ -195,7 +197,7 @@ public class ArchiverController{
     	if(file != null){
 	    	try{
 		    	ArrayList<String> fileList = new ArrayList<>();
-				BufferedReader reader = Files.newBufferedReader(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8"));
+				BufferedReader reader = Files.newBufferedReader(Paths.get("presets/" + backupDetails.getName() + ".txt"), Charset.forName("UTF-8"));
 
 				String line = null;
 				while ((line = reader.readLine()) != null){
@@ -203,7 +205,7 @@ public class ArchiverController{
 				}
 				reader.close();
 				fileList.set(1, file.getAbsolutePath());
-				BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8")
+				BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupDetails.getName() + ".txt"), Charset.forName("UTF-8")
 						, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
 				for(String item : fileList){
 					writer.write(item);
@@ -253,7 +255,7 @@ public class ArchiverController{
     void removeFromPreset(String input){
     	try{
 	    	ArrayList<String> fileList = new ArrayList<>();
-			BufferedReader reader = Files.newBufferedReader(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8"));
+			BufferedReader reader = Files.newBufferedReader(Paths.get("presets/" + backupDetails.getName() + ".txt"), Charset.forName("UTF-8"));
 			//System.out.println(input);
 			String line = null;
 			while ((line = reader.readLine()) != null){
@@ -261,7 +263,7 @@ public class ArchiverController{
 					fileList.add(line);
 			}
 			reader.close();
-			BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupFileName.getText() + ".txt"), Charset.forName("UTF-8")
+			BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupDetails.getName() + ".txt"), Charset.forName("UTF-8")
 					, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
 			for(String item : fileList){
 				writer.write(item);
@@ -300,7 +302,7 @@ public class ArchiverController{
     }
 	void addToPreset(String input){
 		try{
-			BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupFileName.getText() + ".txt"), 
+			BufferedWriter writer = Files.newBufferedWriter(Paths.get("presets/" + backupDetails.getName() + ".txt"), 
 						Charset.forName("UTF-8"), StandardOpenOption.APPEND, StandardOpenOption.CREATE);
 			writer.write(input);
 			writer.newLine();
@@ -402,13 +404,16 @@ public class ArchiverController{
 		backupFileList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		backupFileList.setRoot(new TreeItem<String>("Backup Contents"));
 		backupFileList.getRoot().setExpanded(true);
+
+		backupFileName.textProperty().bind(backupDetails.nameProperty());
+		backupDestinationBox.textProperty().bind(backupDetails.locationProperty());
 	}
 
     @FXML
     void runBackup() {
     	setBackupButtonDisable(true);
- 		String backupName = backupFileName.getText();
- 		String backupDestination = backupDestinationBox.getText();
+ 		String backupName = backupDetails.getName();
+ 		String backupDestination = backupDetails.getLocation();
  		String backupOutputFile = backupDestination + File.separator + backupName;
     	ArrayList<String> tempList = new ArrayList<>();
     	tempList.addAll(getAllChildren(backupFileList.getRoot()));
@@ -475,9 +480,9 @@ public class ArchiverController{
 				backupProgressText.textProperty().unbind();
 				backupProgressText.setText(text);
 				
-				if(backupToRunningBackupThreadMap.get(backupFileName.getText()) != null){
+				if(backupToRunningBackupThreadMap.get(backupDetails.getName()) != null){
 					backupProgressText.textProperty().bind(backupToRunningBackupThreadMap
-						.get(backupFileName.getText()).messageProperty());						
+						.get(backupDetails.getName()).messageProperty());						
 				}
 				
 
@@ -489,10 +494,10 @@ public class ArchiverController{
 		Platform.runLater(new Runnable(){
 			@Override public void run() {
 				backupProgressText.textProperty().unbind();
-				backupProgressText.setText(backupToRunningBackupThreadMap.get(backupFileName.getText()).getMessage());				
+				backupProgressText.setText(backupToRunningBackupThreadMap.get(backupDetails.getName()).getMessage());				
 	
 				backupProgressText.textProperty().bind(backupToRunningBackupThreadMap
-					.get(backupFileName.getText()).messageProperty());			
+					.get(backupDetails.getName()).messageProperty());			
 			}
 		});
 	}
@@ -500,10 +505,10 @@ public class ArchiverController{
 	private void updateProgressBarToThread(){
 		Platform.runLater(new Runnable(){
 			@Override public void run() {
-				runningBackupProgressBar.setProgress(backupToRunningBackupThreadMap.get(backupFileName.getText()).getProgress());
+				runningBackupProgressBar.setProgress(backupToRunningBackupThreadMap.get(backupDetails.getName()).getProgress());
 				runningBackupProgressBar.progressProperty().unbind();
 				runningBackupProgressBar.progressProperty().bind(backupToRunningBackupThreadMap
-					.get(backupFileName.getText()).progressProperty());			
+					.get(backupDetails.getName()).progressProperty());			
 			}
 		});
 	}
@@ -568,9 +573,9 @@ public class ArchiverController{
 
 								setStatusText("Reading file.");
 								BufferedReader reader = Files.newBufferedReader(Paths.get(backupFile.getPath()), Charset.forName("UTF-8"));
-								backupFileName.setText(reader.readLine());
-								backupDestinationBox.setText(reader.readLine());
-
+								backupDetails.setName(reader.readLine());
+								backupDetails.setLocation(reader.readLine());
+								int interval = Integer.valueOf(reader.readLine());
 								String line = null;
 								while ((line = reader.readLine()) != null)
 									fileList.add(line);
@@ -605,10 +610,10 @@ public class ArchiverController{
 							}
 						}
 						else{
-							backupFileName.setText("");
+							backupDetails.setName("");
 						}
 					}
-					if(backupToRunningBackupThreadMap.get(backupFileName.getText()) != null){
+					if(backupToRunningBackupThreadMap.get(backupDetails.getName()) != null){
 						updateProgressBarToThread();
 						updateProgressTextToThread();
 						setBackupButtonDisable(true);
